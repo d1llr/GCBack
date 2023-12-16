@@ -9,6 +9,7 @@ const bcrypt = require("bcryptjs");
 
 exports.signup = (req, res) => {
   // Save User to Database
+  console.log(req.body);
   User.create({
     username: req.body.username,
     email: req.body.email,
@@ -108,7 +109,7 @@ exports.refreshToken = async (req, res) => {
 
     if (RefreshToken.verifyExpiration(refreshToken)) {
       RefreshToken.destroy({ where: { id: refreshToken.id } });
-      
+
       res.status(403).json({
         message: "Refresh token was expired. Please make a new signin request",
       });
