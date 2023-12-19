@@ -12,6 +12,15 @@ module.exports = function (app) {
 
   app.get("/api/user/getInfoById/:id", [authJwt.verifyToken], controller.getInfoById);
 
+
+  app.post("/api/user/setWallet", [authJwt.verifyToken], controller.setWallet);
+
+  app.post("/api/user/removeWallet", [authJwt.verifyToken], controller.removeWallet);
+
+
+  app.post("/api/user/rechargeBalance", [authJwt.verifyToken], controller.rechargeBalance);
+  app.post("/api/user/withdrawBalance", [authJwt.verifyToken], controller.withdrawBalance);
+
   app.get(
     "/api/test/mod",
     [authJwt.verifyToken, authJwt.isModerator],

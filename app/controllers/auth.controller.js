@@ -11,8 +11,11 @@ exports.signup = (req, res) => {
   // Save User to Database
   console.log(req.body);
   User.create({
+    name: req.body.name,
     username: req.body.username,
     email: req.body.email,
+    wallet: null,
+    balance: 0,
     password: bcrypt.hashSync(req.body.password, 8)
   })
     .then(user => {
@@ -38,6 +41,7 @@ exports.signup = (req, res) => {
     .catch(err => {
       res.status(500).send({ message: err.message });
     });
+
 };
 
 exports.signin = (req, res) => {
@@ -48,7 +52,7 @@ exports.signin = (req, res) => {
   })
     .then(async (user) => {
       if (!user) {
-        return res.status(404).send({ message: "User Not found." });
+        return res.status(402).send({ message: "User Not found." });
       }
 
       const passwordIsValid = bcrypt.compareSync(
@@ -80,6 +84,8 @@ exports.signin = (req, res) => {
           username: user.username,
           email: user.email,
           roles: authorities,
+          wallet: user.wallet,
+          balance: user.balance,
           accessToken: token,
           refreshToken: refreshToken,
         });
@@ -127,3 +133,5 @@ exports.refreshToken = async (req, res) => {
     return res.status(500).send({ message: err });
   }
 };
+
+
