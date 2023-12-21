@@ -1,5 +1,7 @@
 const db = require("../models");
 const { games: games } = db;
+const fs = require('fs');
+
 
 exports.getAll = (req, res) => {
   try {
@@ -19,7 +21,13 @@ exports.getById = (req, res) => {
         id: req.params["gameId"]
       }
     }).then(game => {
-      res.status(200).send(game);
+      fs.readdir(game.scr_dir, (err, files) => {
+        if (err) console.log(err);
+        res.status(200).send({
+          game: game,
+          screenshots: files
+        });
+      });
     })
   }
   catch {

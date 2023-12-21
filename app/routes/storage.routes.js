@@ -12,6 +12,8 @@ module.exports = function (app) {
 
     app.get("/storage/:section/:image", controller.getImage);
 
+
+    app.get("/storage/:section/:game/:image", controller.getGameImage);
     // app.get(
     //   "/api/test/user",
     //   [authJwt.verifyToken],

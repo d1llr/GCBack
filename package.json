@@ -5,8 +5,8 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "set NODE_ENV=production && nodemon server.js",
-    "dev": "set NODE_ENV=development && nodemon server.js"
+    "start": "export NODE_ENV=production && nodemon server.js",
+    "dev": "export NODE_ENV=development && nodemon server.js"
   },
   "keywords": [
     "node.js",
@@ -24,6 +24,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.17.1",
+    "fs": "^0.0.1-security",
     "jsonwebtoken": "^8.5.1",
     "mysql2": "^2.1.0",
     "pm2": "^5.3.0",

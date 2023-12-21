@@ -9,10 +9,20 @@ module.exports = (sequelize, Sequelize) => {
     description: {
       type: Sequelize.STRING
     },
+    scr_dir: {
+      type: Sequelize.STRING
+    },
+    links:{
+      type: Sequelize.JSON
+    },
+    short_desc: {
+      type: Sequelize.STRING
+    },
     id: {
       type: Sequelize.STRING,
       primaryKey: true
-    }
+    },
+
   });
 
   return Games;
