@@ -1,4 +1,4 @@
-const { authAPI } = require("../middleware");
+const { authAPI } = require("../../middleware");
 const controller = require("../../controllers/GameServer/match.controller");
 
 module.exports = function (app) {
