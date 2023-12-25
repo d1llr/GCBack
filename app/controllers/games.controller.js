@@ -34,3 +34,5 @@ exports.getById = (req, res) => {
     res.status(500).send({ message: 'gameId не существует' });
   };
 };
+
+

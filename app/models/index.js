@@ -31,6 +31,15 @@ db.tournaments = require("../models/tournaments.model.js")(sequelize, Sequelize)
 db.role = require("../models/role.model.js")(sequelize, Sequelize);
 db.refreshToken = require("../models/refreshToken.model.js")(sequelize, Sequelize);
 
+
+//GAME SERVER
+
+db.gameVersion = require('../models/GameServer/gamesVersion.model.js')(sequelize, Sequelize);
+db.api_key = require('../models/GameServer/api.key.model.js')(sequelize, Sequelize);
+db.matches = require('../models/GameServer/matches.model.js')(sequelize, Sequelize);
+
+// --------------------------------------------------------------------- //
+
 db.role.belongsToMany(db.user, {
   through: "user_roles",
   foreignKey: "roleId",
@@ -46,6 +55,7 @@ db.user.belongsToMany(db.role, {
 db.refreshToken.belongsTo(db.user, {
   foreignKey: 'userId', targetKey: 'id'
 });
+
 db.user.hasOne(db.refreshToken, {
   foreignKey: 'userId', targetKey: 'id'
 });

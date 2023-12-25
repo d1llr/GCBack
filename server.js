@@ -38,6 +38,9 @@ require('./app/routes/games.routes')(app);
 require('./app/routes/nft.routes')(app);
 require('./app/routes/tournaments.routes')(app);
 require('./app/routes/storage.routes')(app);
+require('./app/routes/GameServer/user.game.routes')(app);
+require('./app/routes/GameServer/game.client.routes')(app);
+
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {

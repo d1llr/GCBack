@@ -65,6 +65,22 @@ exports.removeWallet = (req, res) => {
 
 
 
+exports.getBalance = (req, res) => {
+  try {
+    user.findOne({
+      where: {
+        id: req.params["id"]
+      }
+    }).then(founded => {
+      res.status(200).send(founded.balance);
+    })
+  }
+  catch {
+    res.status(500).send({ message: 'gameId не существует' });
+  };
+};
+
+
 exports.rechargeBalance = (req, res) => {
   // Save User to Database
   console.log(req.body);
@@ -111,7 +127,7 @@ exports.withdrawBalance = (req, res) => {
             });
           });
       }
-      else{
+      else {
         res.status(499).send({ message: 'Balance coudnt be < 0!' });
       }
     })
