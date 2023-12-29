@@ -1,5 +1,6 @@
 const db = require("../models");
 const { user: user } = db;
+const { matches: matches } = db;
 
 
 
@@ -8,6 +9,38 @@ exports.getInfoById = (req, res) => {
     user.findOne({
       where: {
         id: req.params["id"]
+      }
+    }).then(founded => {
+      res.status(200).send(founded);
+    })
+  }
+  catch {
+    res.status(500).send({ message: 'gameId не существует' });
+  };
+};
+
+
+exports.getIdByToken = (req, res) => {
+  try {
+    user.findOne({
+      where: {
+        wallet: req.params["wallet"]
+      }
+    }).then(founded => {
+      res.status(200).json(founded.id);
+    })
+  }
+  catch {
+    res.status(500).send({ message: 'gameId не существует' });
+  };
+};
+
+
+exports.getUserHistory = (req, res) => {
+  try {
+    matches.findAll({
+      where: {
+
       }
     }).then(founded => {
       res.status(200).send(founded);
@@ -72,8 +105,15 @@ exports.getBalance = (req, res) => {
         id: req.params["id"]
       }
     }).then(founded => {
-      res.status(200).send(founded.balance);
+      res.status(202).json(founded.balance);
+      console.log(founded);
+
     })
+      .catch((err) => {
+        console.log(err);
+        res.status(402).send(err);
+
+      })
   }
   catch {
     res.status(500).send({ message: 'gameId не существует' });

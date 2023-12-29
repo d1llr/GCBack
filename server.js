@@ -1,11 +1,22 @@
 const express = require("express");
 const cors = require("cors");
-require('dotenv').config({ path: `.env.${process.env.NODE_ENV.trim()}`})
+require('dotenv').config({ path: `.env.${process.env.NODE_ENV.trim()}` })
 
 const app = express();
 
 const corsOptions = {
-  origin: process.env.CORS
+  origin: function (origin, callback) {
+    // Проверка, что запрос пришел от разрешенного IP-адреса
+    const allowedIps = ['192.168.1.1', 'https://pacgc.pw']; // замените на разрешенные IP-адреса
+    if (!origin || allowedIps.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true,
+  optionsSuccessStatus: 204,
 };
 app.use(cors(corsOptions));
 
@@ -40,6 +51,7 @@ require('./app/routes/tournaments.routes')(app);
 require('./app/routes/storage.routes')(app);
 require('./app/routes/GameServer/user.game.routes')(app);
 require('./app/routes/GameServer/game.client.routes')(app);
+require('./app/routes/GameServer/match.game.routes')(app);
 
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;

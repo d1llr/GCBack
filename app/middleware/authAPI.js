@@ -5,23 +5,24 @@ const api = db.api_key;
 
 
 const verifyApiKey = (req, res, next) => {
-    let token = req.headers["Access"];
-
+    let token = req.headers["api"];
     if (!token) {
-        return res.status(403).send({ message: "No token provided!" });
+        return res.status(405).send({ message: "No token provided!" });
     }
 
-    api_key.findOne({
+    api.findOne({
         where: {
             api_key: token
         }
     })
         .then(founded => {
+            console.log(founded);
             next();
             return;
         })
         .catch(err => {
-            return res.status(403).send({ message: "APIKEY ERROR" });
+            console.log(err);
+            return res.status(407).send({ message: "APIKEY ERROR" });
         })
 };
 

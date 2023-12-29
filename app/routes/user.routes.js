@@ -13,6 +13,11 @@ module.exports = function (app) {
   app.get("/api/user/getInfoById/:id", [authJwt.verifyToken], controller.getInfoById);
 
 
+
+  app.get("/api/user/getIdByToken/:wallet", controller.getIdByToken);
+
+  app.get("/api/user/getUserHistory", [authJwt.verifyToken], controller.getUserHistory);
+
   app.post("/api/user/setWallet", [authJwt.verifyToken], controller.setWallet);
 
   app.post("/api/user/removeWallet", [authJwt.verifyToken], controller.removeWallet);
@@ -20,6 +25,11 @@ module.exports = function (app) {
 
   app.post("/api/user/rechargeBalance", [authJwt.verifyToken], controller.rechargeBalance);
   app.post("/api/user/withdrawBalance", [authJwt.verifyToken], controller.withdrawBalance);
+
+
+  //Сервер вовы
+  app.post("/api/user/withdrawBalanceAPI", controller.withdrawBalance);
+
 
   app.get(
     "/api/test/mod",

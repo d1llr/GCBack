@@ -1,6 +1,6 @@
 module.exports = (sequelize, Sequelize) => {
     const api_key = sequelize.define("api_key", {
-        name: {
+        server: {
             type: Sequelize.STRING
         },
         id: {
@@ -10,6 +10,8 @@ module.exports = (sequelize, Sequelize) => {
         api_key: {
             type: Sequelize.STRING
         }
+    }, {
+        timestamps: false
     });
 
     return api_key;

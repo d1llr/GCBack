@@ -1,5 +1,5 @@
 module.exports = (sequelize, Sequelize) => {
-    const gameVersion = sequelize.define("games_versions", {
+    const gameVersion = sequelize.define("game_versions", {
         name: {
             type: Sequelize.STRING
         },
@@ -10,6 +10,8 @@ module.exports = (sequelize, Sequelize) => {
         version: {
             type: Sequelize.STRING
         }
+    }, {
+        timestamps: false
     });
 
     return gameVersion;

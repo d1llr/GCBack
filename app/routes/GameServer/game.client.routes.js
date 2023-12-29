@@ -10,6 +10,6 @@ module.exports = function (app) {
     next();
   });
 
-  app.get("/api/GS/game/checkVersion/:name", [authJwt.verifyToken], controller.checkVersion);
+  app.get("/api/GS/game/checkVersion/:name", controller.checkVersion);
 
 };

@@ -10,8 +10,12 @@ exports.checkVersion = (req, res) => {
       }
     }).then(game => {
       res.status(200).send(game.version);
-
+      console.log(game.version);
     })
+      .catch((err) => {
+        res.status(402).send(err);
+        console.log(err);
+      })
   }
   catch {
     res.status(500).send({ message: 'checkVersion error!' });

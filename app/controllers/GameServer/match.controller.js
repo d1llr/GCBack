@@ -1,5 +1,6 @@
 const db = require("../../models");
 const { matches: matches, user: users } = db;
+const Op = db.Sequelize.Op;
 
 
 
@@ -31,16 +32,24 @@ exports.finishMatch = (req, res) => {
                 end: true,
                 winner_id: req.body.winner_id
             }).then(() => {
-                winner = users.findByPk(
-                    req.body.winner_id
-                ).catch(() => {
-                    res.status(501).send({ message: 'winners not found!' });
+                users.findOne(
+                    {
+                        where: {
+                            id: req.body.winner_id
+                        }
+                    }
+                ).then(winner => {
+                    winner.increment('balance', {
+                        by: match.match_cost * (match.player_IDs.split(',').length - 1)
+                    }).catch((err) => {
+                        console.log(err);
+                        res.status(502).send({ message: 'winners did not receive their winnings!' });
+                    })
                 })
-                winner.update({
-                    balance: match.match_cost * match.player_IDs.split(',').length
-                }).catch(() => {
-                    res.status(502).send({ message: 'winners did not receive their winnings!' });
-                })
+                    .catch((err) => {
+                        console.log(err);
+                        res.status(501).send({ message: 'winners not found!' });
+                    })
                 users.findAll({
                     where: {
                         id: {
@@ -48,21 +57,27 @@ exports.finishMatch = (req, res) => {
                             [Op.ne]: req.body.winner_id
                         }
                     }
-                }).then(user => {
-                    user.decrement('balance', {
-                        by: match.match_cost
-                    }).then(() => {
-                        res.status(200).send({ message: 'Match has been ended succesfully!' });
-                    }).catch(() => {
-                        res.status(503).send({ message: 'Looser balance not decremented!' });
+                }).then(user_arr => {
+                    user_arr.map(user => {
+                        user.decrement('balance', {
+                            by: match.match_cost
+                        }).then(() => {
+                            res.status(200).send({ message: 'Match has been ended succesfully!' });
+                        }).catch((err) => {
+                            console.log(err);
+                            res.status(503).send({ message: 'Looser balance not decremented!' });
+                        })
                     })
-                }).catch(() => {
+                }).catch((err) => {
+                    console.log(err);
                     res.status(504).send({ message: 'Loosers not found!' });
                 })
-            }).catch(() => {
+            }).catch((err) => {
+                console.log(err);
                 res.status(505).send({ message: 'Match could not be ended!' });
             })
-        }).catch(() => {
+        }).catch((err) => {
+            console.log(err);
             res.status(506).send({ message: 'Match could not be found!' });
         })
     }
