@@ -16,12 +16,10 @@ const verifyApiKey = (req, res, next) => {
         }
     })
         .then(founded => {
-            console.log(founded);
             next();
             return;
         })
         .catch(err => {
-            console.log(err);
             return res.status(407).send({ message: "APIKEY ERROR" });
         })
 };
