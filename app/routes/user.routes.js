@@ -16,7 +16,7 @@ module.exports = function (app) {
 
   app.get("/api/user/getIdByToken/:wallet", controller.getIdByToken);
 
-  app.get("/api/user/getUserHistory", [authJwt.verifyToken], controller.getUserHistory);
+  app.post("/api/user/getUserHistory", [authJwt.verifyToken], controller.getUserHistory);
 
   app.post("/api/user/setWallet", [authJwt.verifyToken], controller.setWallet);
 

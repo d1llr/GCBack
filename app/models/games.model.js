@@ -1,5 +1,8 @@
 module.exports = (sequelize, Sequelize) => {
   const Games = sequelize.define("games", {
+    active: {
+      type: Sequelize.BOOLEAN
+    },
     image: {
       type: Sequelize.STRING
     },
@@ -12,7 +15,7 @@ module.exports = (sequelize, Sequelize) => {
     scr_dir: {
       type: Sequelize.STRING
     },
-    links:{
+    links: {
       type: Sequelize.JSON
     },
     short_desc: {

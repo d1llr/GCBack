@@ -21,7 +21,10 @@ module.exports = (sequelize, Sequelize) => {
         },
         winner_id: {
             type: Sequelize.STRING
-        }
+        },
+        game: {
+            type: Sequelize.STRING
+        },
     });
 
     return matches;

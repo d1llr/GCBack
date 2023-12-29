@@ -9,7 +9,7 @@ module.exports = function (app) {
     );
     next();
   });
-
-  app.get("/api/GS/user/getBalance/:id", [authJwt.verifyToken], controller.getBalance);
+  // убрал токен для вовы
+  app.get("/api/GS/user/getBalance/:id", controller.getBalance);
 
 };

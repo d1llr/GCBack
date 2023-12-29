@@ -10,7 +10,8 @@ exports.startMatch = (req, res) => {
             match_key: req.body.match_key,
             match_name: req.body.match_name,
             match_cost: req.body.match_cost,
-            player_IDs: req.body.player_IDs
+            player_IDs: req.body.player_IDs,
+            game: req.body.game_name
         })
             .then(() => {
                 res.status(200).send({ message: 'Match has been created!' });

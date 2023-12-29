@@ -37,13 +37,28 @@ exports.getIdByToken = (req, res) => {
 
 
 exports.getUserHistory = (req, res) => {
+  console.log(req.body);
   try {
     matches.findAll({
       where: {
-
+        game: req.body.game
       }
     }).then(founded => {
-      res.status(200).send(founded);
+      let arr = []
+      founded.map(match => {
+        console.log(match.player_IDs.split(',').includes(req.body.id.toString()));
+        if (match.player_IDs.split(',').includes(req.body.id.toString())) {
+          arr.push({
+            title: match.match_name,
+            isWinner: match.winner_id == req.body.id ? true : false,
+            match_cost: match.match_cost,
+            createdAt: match.createdAt
+          })
+        }
+      })
+      res.status(200).json(arr);
+    }).catch(err => {
+      console.log(err);
     })
   }
   catch {
