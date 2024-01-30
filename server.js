@@ -1,13 +1,42 @@
 const express = require("express");
 const cors = require("cors");
 require('dotenv').config({ path: `.env.${process.env.NODE_ENV.trim()}` })
-
+var sequelize = require("sequelize");
 const app = express();
+
+var cron = require('node-cron');
+var crypto = require('node:crypto');
+const { log } = require("node:console");
+const { WebSocketInit } = require("./websocketserver");
+
+// const WebSocketInitFunc = require('./websocketserver')(WebSocketInit)
+// require('./websocketserver')(app)
+// const WebSocket = require('ws');
+// const fs = require('node:fs');
+// var https = require('http');
+
+// const options = {
+//   key: fs.readFileSync('/etc/letsencrypt/live/back.pacgc.pw/privkey.pem'),
+//   cert: fs.readFileSync('/etc/letsencrypt/live/back.pacgc.pw/cert.pem'),
+// };
+
+
+// //create a server object:
+// const server = https.createServer(options, function (req, res) {
+//   res.write('Hello World!'); //write a response to the client
+//   res.end(); //end the response]
+//   console.log('started ws server');
+// }, app);
+
+
+
+// const wss = new WebSocket.Server({ server });
+
 
 const corsOptions = {
   origin: function (origin, callback) {
     // Проверка, что запрос пришел от разрешенного IP-адреса
-    const allowedIps = ['192.168.1.1', 'https://pacgc.pw']; // замените на разрешенные IP-адреса
+    const allowedIps = ['https://dev.pacgc.pw', 'https://pacgc.pw', 'https://www.pacshooter.pw']; // замените на разрешенные IP-адреса
     if (!origin || allowedIps.includes(origin)) {
       callback(null, true);
     } else {
@@ -29,8 +58,14 @@ app.use(express.urlencoded({ extended: true }));
 // database
 const db = require("./app/models");
 const Role = db.role;
+const users = db.user
+const Tournaments = db.tournaments
+const activeTournaments = db.activeTournaments
+const historyTournaments = db.historyTournaments
 
-db.sequelize.sync();
+
+
+// db.sequelize.sync();
 // force: true will drop the table if it already exists
 // db.sequelize.sync({force: true}).then(() => {
 //   console.log('Drop and Resync Database with { force: true }');
@@ -42,36 +77,170 @@ app.get("/", (req, res) => {
   res.json({ message: "Welcome to bezkoder application." });
 });
 
+
+// expressWs(app)
+
+// app.ws('/', function (ws, req) {
+//   ws.on('connection', function (msg) {
+//     console.log('ws connected');
+//   });
+// });
+
 // routes
 require('./app/routes/auth.routes')(app);
 require('./app/routes/user.routes')(app);
 require('./app/routes/games.routes')(app);
 require('./app/routes/nft.routes')(app);
 require('./app/routes/tournaments.routes')(app);
+
 require('./app/routes/storage.routes')(app);
 require('./app/routes/GameServer/user.game.routes')(app);
 require('./app/routes/GameServer/game.client.routes')(app);
 require('./app/routes/GameServer/match.game.routes')(app);
+require('./app/routes/Time/time.routes')(app);
 
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}. | ${process.env.NODE_ENV} |`);
+  TournamentsInit()
+  WebSocketInit(app)
 });
 
+
+// server.listen(7070, function () {
+//   console.log('Server is running on port 7070');
+// });
+
 function initial() {
-  Role.create({
-    id: 1,
-    name: "user"
-  });
+  users.findOne({
+    where: {
+      id: 1
+    }
 
-  Role.create({
-    id: 2,
-    name: "moderator"
-  });
+  }).then(user => {
+    user.update({
+      balance: user.balance - 1
+    })
+  })
+  // Role.create({
+  //   id: 1,
+  //   name: "user"
+  // });
 
-  Role.create({
-    id: 3,
-    name: "admin"
-  });
+  // Role.create({
+  //   id: 2,
+  //   name: "moderator"
+  // });
+
+  // Role.create({
+  //   id: 3,
+  //   name: "admin"
+  // });
 }
+
+// wss.on('connection', (ws) => {
+//   ws.on('message', function incoming(message) {
+//     console.log('received: %s', JSON.parse(message));
+//   });
+
+//   users.afterBulkUpdate((user, options) => {
+//     console.log('balance updated');
+//     ws.send(JSON.stringify({ type: 'balance', message: user.balance }));
+//   });
+//   // cron.schedule(`*/3 * * * * *`, function () {
+//   //   initial()
+//   // }, {
+//   //   timezone: "Europe/Moscow"
+//   // });
+// })
+
+
+async function TournamentsInit() {
+  console.log('-------- INIT TOUTNAMENTS --------');
+  console.log('Finding not disabled tournaments...');
+  Tournaments.findAll({
+    where: {
+      disabled: false
+    }
+  }).then(tournaments => {
+    console.log(`Founded ${tournaments.length} not disabled tournaments`);
+    tournaments.forEach(tournament => {
+      console.log(`"${tournament.name} ${tournament.id}" tournaments will start every ${tournament.dayOfWeekFrom}!`);
+      // Запуск турнира
+      cron.schedule(`34 18 * * saturday`, function () {
+        console.log(`"${tournament.name}" tournaments created!`);
+        historyTournaments.findOne({
+          attributes: [[sequelize.fn('COUNT', sequelize.col('name')), 'count_names'],],
+          where: {
+            name: tournament.name
+          }
+        })
+          .then((hist_founded) => {
+            console.log('founded ', hist_founded.dataValues.count_names);
+            activeTournaments.create({
+              image: tournament.dataValues.image,
+              disabled: tournament.dataValues.disabled,
+              name: tournament.dataValues.name,
+              description: tournament.dataValues.description,
+              daysLeft: tournament.dataValues.daysLeft,
+              id: tournament.dataValues.id + hist_founded.dataValues.count_names,
+              cost: tournament.dataValues.cost,
+              game: tournament.dataValues.game,
+              dayOfWeekFrom: tournament.dataValues.dayOfWeekFrom,
+              dayOfWeekTo: tournament.dataValues.dayOfWeekTo,
+              goal: tournament.dataValues.goal,
+              participants: 0,
+              bank: tournament.dataValues.bank,
+              tournament_key: crypto.randomBytes(10).toString('hex')
+            })
+          })
+        // Создание в определенный день активного турнира
+      }, {
+        timezone: "Europe/Moscow"
+      });
+      console.log(`"${tournament.name} ${tournament.id}" tournaments will end on next ${tournament.dayOfWeekTo}!`);
+
+      // Завершение активного турнира ${tournament.dayOfWeekTo} 
+      cron.schedule(`00 18 * * saturday`, function () {
+        activeTournaments.findOne({
+          where: {
+            name: tournament.dataValues.name
+          }
+        }).then(async tour => {
+          console.log(tour);
+          await historyTournaments.create({
+            image: tour.dataValues.image,
+            disabled: tour.dataValues.disabled,
+            name: tour.dataValues.name,
+            description: tour.dataValues.description,
+            id: tour.dataValues.id,
+            daysLeft: tour.dataValues.daysLeft,
+            players: tour.dataValues.players,
+            cost: tour.dataValues.cost,
+            game: tour.dataValues.game,
+            dayOfWeekFrom: tour.dataValues.dayOfWeekFrom,
+            dayOfWeekTo: tour.dataValues.dayOfWeekTo,
+            goal: tour.dataValues.goal,
+            participants: tour.dataValues.participants,
+            bank: tour.dataValues.bank,
+            tournament_key: tour.dataValues.tournament_key
+          }).then(() => {
+            activeTournaments.destroy({
+              where: {
+                id: tour.dataValues.id
+              }
+            })
+            console.log(`"${tournament.name} ${tournament.id}" tournaments deleted from active tournaments!`);
+          })
+        })
+        console.log(`"${tournament.name}" tournaments ended!`);
+      }, {
+        timezone: "Europe/Moscow"
+      });
+    });
+  })
+}
+// cron.schedule("*/10 * * * * *", function() {
+//   console.log("running a task every 10 second");
+// });

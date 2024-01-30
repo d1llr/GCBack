@@ -1,4 +1,4 @@
-const { authAPI } = require("../../middleware");
+const { authAPI, authJwt } = require("../../middleware");
 const controller = require("../../controllers/GameServer/match.controller");
 
 module.exports = function (app) {
@@ -11,7 +11,17 @@ module.exports = function (app) {
     });
 
     app.post("/api/GS/match/startMatch", [authAPI.verifyApiKey], controller.startMatch);
+    app.post("/api/GS/match/startSingleMatch", [authJwt.verifyToken], controller.startSingleMatch);
+
+
 
     app.post("/api/GS/match/finishMatch", [authAPI.verifyApiKey], controller.finishMatch);
+    app.post("/api/GS/match/finishSingleMatch", [authJwt.verifyToken], controller.finishSingleMatch);
+
+
+
+
+    app.get("/api/user/singleMatch/getLastLevel/:id", [authJwt.verifyToken], controller.getLastLevel);
+
 
 };

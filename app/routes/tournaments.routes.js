@@ -12,6 +12,15 @@ module.exports = function (app) {
 
   app.get("/api/tournaments/all", [authJwt.verifyToken], controller.getAll);
 
+  app.get("/api/tournaments/history", [authJwt.verifyToken], controller.getHistory);
+
   app.get("/api/tournaments/:tournamentId", [authJwt.verifyToken], controller.getById);
+
+  app.get("/api/tournaments/history/:tournamentId", [authJwt.verifyToken], controller.getByIdFromHistory);
+
+  app.post("/api/tournaments/getParticipate", [authJwt.verifyToken], controller.getParticipate);
+
+  app.post("/api/tournaments/getRating", [authJwt.verifyToken], controller.getRating);
+
 
 };

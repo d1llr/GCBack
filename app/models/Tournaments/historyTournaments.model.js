@@ -1,7 +1,10 @@
 module.exports = (sequelize, Sequelize) => {
-  const Tournaments = sequelize.define("tournaments", {
+  const historyTournaments = sequelize.define("history_tournaments", {
     image: {
       type: Sequelize.STRING
+    },
+    disabled: {
+      type: Sequelize.BOOLEAN
     },
     name: {
       type: Sequelize.STRING
@@ -13,7 +16,25 @@ module.exports = (sequelize, Sequelize) => {
       type: Sequelize.STRING,
       primaryKey: true
     },
+    players: {
+      type: Sequelize.STRING
+    },
+    cost: {
+      type: Sequelize.INTEGER
+    },
+    game: {
+      type: Sequelize.STRING
+    },
     daysLeft: {
+      type: Sequelize.STRING
+    },
+    dayOfWeekFrom: {
+      type: Sequelize.STRING
+    },
+    dayOfWeekTo: {
+      type: Sequelize.STRING
+    },
+    tournament_key: {
       type: Sequelize.STRING
     },
     goal: {
@@ -27,5 +48,5 @@ module.exports = (sequelize, Sequelize) => {
     },
   });
 
-  return Tournaments;
+  return historyTournaments;
 };

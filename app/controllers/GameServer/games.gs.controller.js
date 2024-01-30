@@ -3,6 +3,7 @@ const { gameVersion: gameVersion } = db;
 
 
 exports.checkVersion = (req, res) => {
+  console.log(req.params["name"]);
   try {
     gameVersion.findOne({
       where: {

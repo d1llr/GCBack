@@ -1,4 +1,4 @@
-const { authJwt } = require("../middleware");
+const { authJwt, authAPI } = require("../middleware");
 const controller = require("../controllers/user.controller");
 
 module.exports = function (app) {
@@ -12,9 +12,13 @@ module.exports = function (app) {
 
   app.get("/api/user/getInfoById/:id", [authJwt.verifyToken], controller.getInfoById);
 
+  app.get("/api/user/getUserName/:id", [authJwt.verifyToken], controller.getUserName);
 
 
-  app.get("/api/user/getIdByToken/:wallet", controller.getIdByToken);
+  app.post("/api/user/inGamePurchases", [authJwt.verifyToken], controller.Purchases);
+
+
+  app.get("/api/user/getIdByToken/:wallet", [authAPI.verifyApiKey], controller.getIdByToken);
 
   app.post("/api/user/getUserHistory", [authJwt.verifyToken], controller.getUserHistory);
 
@@ -28,7 +32,9 @@ module.exports = function (app) {
 
 
   //Сервер вовы
-  app.post("/api/user/withdrawBalanceAPI", controller.withdrawBalance);
+  app.post("/api/user/rechargeBalanceAPI", [authAPI.verifyApiKey], controller.rechargeBalance);
+
+  app.post("/api/user/withdrawBalanceAPI", [authAPI.verifyApiKey], controller.withdrawBalance);
 
 
   app.get(

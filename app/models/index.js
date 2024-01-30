@@ -27,16 +27,22 @@ db.sequelize = sequelize;
 db.user = require("../models/user.model.js")(sequelize, Sequelize);
 db.games = require("../models/games.model.js")(sequelize, Sequelize);
 db.nft = require("../models/nft.model.js")(sequelize, Sequelize);
-db.tournaments = require("../models/tournaments.model.js")(sequelize, Sequelize);
+db.tournaments = require("../models/Tournaments/tournaments.model.js")(sequelize, Sequelize);
+db.activeTournaments = require("../models/Tournaments/activeTournaments.model.js")(sequelize, Sequelize);
+db.historyTournaments = require("../models/Tournaments/historyTournaments.model.js")(sequelize, Sequelize);
 db.role = require("../models/role.model.js")(sequelize, Sequelize);
 db.refreshToken = require("../models/refreshToken.model.js")(sequelize, Sequelize);
 
+// Покупки
+
+db.purchases = require("../models/purchases.model.js")(sequelize, Sequelize);
 
 //GAME SERVER
 
 db.gameVersion = require('../models/GameServer/gamesVersion.model.js')(sequelize, Sequelize);
 db.api_key = require('../models/GameServer/api.key.model.js')(sequelize, Sequelize);
 db.matches = require('../models/GameServer/matches.model.js')(sequelize, Sequelize);
+db.levels = require('../models/GameServer/levels.model.js')(sequelize, Sequelize);
 
 // --------------------------------------------------------------------- //
 
