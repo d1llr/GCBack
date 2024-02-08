@@ -446,17 +446,17 @@ async function TournamentsInit() {
               } winners: ${ethers.utils.parseEther(value[i].prize.toString())}`
             );
 
-            for (let i = 0; i < value.length; i++) {
-              const provider = new ethers.providers.JsonRpcProvider(
-                "https://rpc.octa.space"
-              );
-              await sendETH(
-                "0xeb87b63e7d60ec0d5aa09b4739647eb3bd19ca60999ce14b7f96deaa9e5d8564", // make as process.env.TOURNAMENT_PK
-                provider,
-                ethers.utils.parseEther(value[i].prize.toString()),
-                value[i].wallet.toString()
-              );
-            }
+            // for (let i = 0; i < value.length; i++) {
+            //   const provider = new ethers.providers.JsonRpcProvider(
+            //     "https://rpc.octa.space"
+            //   );
+            //   await sendETH(
+            //     "0xeb87b63e7d60ec0d5aa09b4739647eb3bd19ca60999ce14b7f96deaa9e5d8564", // make as process.env.TOURNAMENT_PK
+            //     provider,
+            //     ethers.utils.parseEther(value[i].prize.toString()),
+            //     value[i].wallet.toString()
+            //   );
+            // }
           });
           // });
         });
