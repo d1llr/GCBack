@@ -1,23 +1,23 @@
-import { ethers } from "ethers";
-import { sendETH } from "./ethereum";
-import express, { json, urlencoded } from "express";
-import cors from "cors";
+const { ethers } = require("ethers");
+const { sendETH } = require("./ethereum");
+const express = require("express");
+const cors = require("cors");
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV.trim()}` });
-import { fn, col } from "sequelize";
+var sequelize = require("sequelize");
 const app = express();
 
-import { schedule } from "node-cron";
-import { randomBytes } from "node:crypto";
-import { log } from "node:console";
-import { WebSocketInit, wsSend } from "./websocketserver";
+var cron = require("node-cron");
+var crypto = require("node:crypto");
+const { log } = require("node:console");
+const { WebSocketInit, wsSend } = require("./websocketserver");
 
-import { Server } from "ws";
-import { readFileSync } from "node:fs";
-import { createServer } from "http";
+const WebSocket = require("ws");
+const fs = require("node:fs");
+var https = require("http");
 
 const options = {
-  key: readFileSync("/etc/letsencrypt/live/back.pacgc.pw/privkey.pem"),
-  cert: readFileSync("/etc/letsencrypt/live/back.pacgc.pw/cert.pem"),
+  key: fs.readFileSync("/etc/letsencrypt/live/back.pacgc.pw/privkey.pem"),
+  cert: fs.readFileSync("/etc/letsencrypt/live/back.pacgc.pw/cert.pem"),
 };
 
 // //create a server object:
