@@ -445,7 +445,6 @@ async function TournamentsInit() {
                 tour.dataValues.name
               } winners: ${ethers.utils.parseEther(value[i].prize.toString())}`
             );
-            console.log("EKKEKEKEKEKE");
 
             for (let i = 0; i < value.length; i++) {
               const provider = new ethers.providers.JsonRpcProvider(
