@@ -56,6 +56,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // database
 const db = require("./app/models");
+const { resolve } = require("node:path");
 const Role = db.role;
 const users = db.user;
 const matches = db.matches;
@@ -134,9 +135,15 @@ wss.on("connection", async (ws) => {
   users.afterUpdate((user, options) => {
     console.log("balance updated by user", user.id);
     console.log("send a new balance to user id ", user.id);
-    WSS_CLIENTS[user.id].send(
-      JSON.stringify({ type: "balance", message: user.balance })
-    );
+    try {
+      WSS_CLIENTS[user.id].send(
+        JSON.stringify({ type: "balance", message: user.balance })
+      );
+
+    }
+    catch {
+      console.log(WSS_CLIENTS[user.id], 'is empty');
+    }
   });
 });
 // console.log(WSS_CLIENTS);
@@ -253,91 +260,94 @@ async function TournamentsInit() {
   console.log("-------- INIT TOUTNAMENTS --------");
   console.log("Finding not disabled tournaments...");
   const getWinners = (tour) => {
-    var result = {};
-    var resp = [];
-    tour.players.split(",")?.forEach((user) => {
-      result[user] = 0;
-    });
-    matches
-      .findAll({
-        where: {
-          tournament_key: tour.tournament_key,
-        },
-      })
-      .then(async (matches) => {
-        matches.forEach(async (match) => {
-          match.tournament_participants
-            .split(",")
-            ?.forEach((match_participants) => {
-              if (match_participants == match.winner_id) {
-                result[match_participants] += match.match_cost;
-              } else {
-                result[match_participants] -= match.match_cost;
-              }
-            });
-        });
+    return new Promise((resolve) => {
 
-        var tuples = [];
-        for (var key in result) tuples.push([key, result[key]]);
-        tuples.sort(function (a, b) {
-          a = a[1];
-          b = b[1];
-          return a > b ? -1 : a < b ? 1 : 0;
-        });
-
-        const findUserName = async (id) => {
-          try {
-            const founded_user = await users.findOne({
-              where: {
-                id: id,
-              },
-            });
-            return founded_user.wallet;
-          } catch (err) {
-            console.log(err);
-          }
-        };
-        for (var i = 0; i < tuples.length; i++) {
-          var key = tuples[i][0];
-          var value = tuples[i][1];
-          var prize = "";
-          switch (i) {
-            case 0:
-              prize = 40;
-              break;
-            case 1:
-              prize = 30;
-              break;
-            case 2:
-              prize = 10;
-              break;
-
-            default:
-              break;
-          }
-          resp.push({
-            wallet: await findUserName(key),
-            prize: prize,
-          });
-        }
-        // tuples.map(async item => {
-        //   await users.findOne({
-        //     where: {
-        //       id: item[0],
-        //     }
-        //   }).then(_usert => resp += {
-        //     _usert: item[1]
-        //   })
-        // })
-        // возможно нужно будет
-
-        console.log(resp);
-        return resp;
-      })
-      .catch((err) => {
-        console.log(err);
-        return err;
+      var result = {};
+      var resp = [];
+      tour.players.split(",")?.forEach((user) => {
+        result[user] = 0;
       });
+      matches
+        .findAll({
+          where: {
+            tournament_key: tour.tournament_key,
+          },
+        })
+        .then(async (matches) => {
+          matches.forEach(async (match) => {
+            match.tournament_participants
+              .split(",")
+              ?.forEach((match_participants) => {
+                if (match_participants == match.winner_id) {
+                  result[match_participants] += match.match_cost;
+                } else {
+                  result[match_participants] -= match.match_cost;
+                }
+              });
+          });
+
+          var tuples = [];
+          for (var key in result) tuples.push([key, result[key]]);
+          tuples.sort(function (a, b) {
+            a = a[1];
+            b = b[1];
+            return a > b ? -1 : a < b ? 1 : 0;
+          });
+
+          const findUserName = async (id) => {
+            try {
+              const founded_user = await users.findOne({
+                where: {
+                  id: id,
+                },
+              });
+              return founded_user.wallet;
+            } catch (err) {
+              console.log(err);
+            }
+          };
+          for (var i = 0; i < tuples.length; i++) {
+            var key = tuples[i][0];
+            var value = tuples[i][1];
+            var prize = "";
+            switch (i) {
+              case 0:
+                prize = 0.1;
+                break;
+              case 1:
+                prize = 0.05;
+                break;
+              case 2:
+                prize = 0.01;
+                break;
+
+              default:
+                break;
+            }
+            resp.push({
+              wallet: await findUserName(key),
+              prize: prize,
+            });
+          }
+          // tuples.map(async item => {
+          //   await users.findOne({
+          //     where: {
+          //       id: item[0],
+          //     }
+          //   }).then(_usert => resp += {
+          //     _usert: item[1]
+          //   })
+          // })
+          // возможно нужно будет
+
+          console.log(resp);
+          resolve(resp);
+        })
+        .catch((err) => {
+          console.log(err);
+          return err;
+        });
+    })
   };
   Tournaments.findAll({
     where: {
@@ -395,63 +405,65 @@ async function TournamentsInit() {
       );
 
       // Завершение активного турнира ${tournament.dayOfWeekTo}
-      cron.schedule(
-        `00 18 * * monday`,
-        function () {
-          activeTournaments
-            .findOne({
-              where: {
-                name: tournament.dataValues.name,
-              },
+      activeTournaments.findOne({
+        where: {
+          name: tournament.dataValues.name,
+        },
+      }).then(async (tour) => {
+        // historyTournaments
+        //   .create({
+        //     image: tour.dataValues.image,
+        //     disabled: tour.dataValues.disabled,
+        //     name: tour.dataValues.name,
+        //     description: tour.dataValues.description,
+        //     id: tour.dataValues.id,
+        //     daysLeft: tour.dataValues.daysLeft,
+        //     players: tour.dataValues.players,
+        //     cost: tour.dataValues.cost,
+        //     game: tour.dataValues.game,
+        //     dayOfWeekFrom: tour.dataValues.dayOfWeekFrom,
+        //     dayOfWeekTo: tour.dataValues.dayOfWeekTo,
+        //     goal: tour.dataValues.goal,
+        //     participants: tour.dataValues.participants,
+        //     bank: tour.dataValues.bank,
+        //     tournament_key: tour.dataValues.tournament_key,
+        //   })
+        //   .then(async () => {
+            // activeTournaments.destroy({
+            //   where: {
+            //     id: tour.dataValues.id,
+            //   },
+            // });
+            console.log(
+              `"${tournament.name} ${tournament.id}" tournaments deleted from active tournaments!`
+            );
+
+
+            getWinners(tour).then(async value => {
+
+              console.log(value.length);
+              console.log(
+                `Tournament ${tour.dataValues.name} winners: ${JSON.stringify(value[0].prize)}`
+              );
+
+              for (let i = 0; i < value.length; i++) {
+                const provider = new ethers.providers.JsonRpcProvider(
+                  "https://rpc.octa.space"
+                );
+                await sendETH(
+                  "0xeb87b63e7d60ec0d5aa09b4739647eb3bd19ca60999ce14b7f96deaa9e5d8564", // make as process.env.TOURNAMENT_PK
+                  provider,
+                  ethers.utils.parseEther(JSON.stringify(value[i].prize).toString()),
+                  JSON.stringify(value[i].wallet).toString()
+                );
+              }
             })
-            .then(async (tour) => {
-              console.log(tour.dataValues.image);
-              await historyTournaments
-                .create({
-                  image: tour.dataValues.image,
-                  disabled: tour.dataValues.disabled,
-                  name: tour.dataValues.name,
-                  description: tour.dataValues.description,
-                  id: tour.dataValues.id,
-                  daysLeft: tour.dataValues.daysLeft,
-                  players: tour.dataValues.players,
-                  cost: tour.dataValues.cost,
-                  game: tour.dataValues.game,
-                  dayOfWeekFrom: tour.dataValues.dayOfWeekFrom,
-                  dayOfWeekTo: tour.dataValues.dayOfWeekTo,
-                  goal: tour.dataValues.goal,
-                  participants: tour.dataValues.participants,
-                  bank: tour.dataValues.bank,
-                  tournament_key: tour.dataValues.tournament_key,
-                })
-                .then(async () => {
-                  activeTournaments.destroy({
-                    where: {
-                      id: tour.dataValues.id,
-                    },
-                  });
-                  console.log(
-                    `"${tournament.name} ${tournament.id}" tournaments deleted from active tournaments!`
-                  );
-
-                  const winners = getWinners(tour);
-                  console.log(
-                    `Tournament ${tour.dataValues.name} winners: ${winners}`
-                  );
-
-                  for (let i = 0; i < winners.length; i++) {
-                    const provider = new ethers.providers.JsonRpcProvider(
-                      "https://rpc.octa.space"
-                    );
-                    await sendETH(
-                      "0xeb87b63e7d60ec0d5aa09b4739647eb3bd19ca60999ce14b7f96deaa9e5d8564", // make as process.env.TOURNAMENT_PK
-                      provider,
-                      ethers.utils.parseEther(winners[i].prize.toString()),
-                      winners[i].wallet.toString()
-                    );
-                  }
-                });
-            });
+          // });
+      });
+      cron.schedule(
+        `03 16 * * thursday`,
+        function () {
+          console.log(tour.dataValues.image);
           console.log(`"${tournament.name}" tournaments ended!`);
         },
         {
