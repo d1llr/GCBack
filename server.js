@@ -444,7 +444,7 @@ async function TournamentsInit() {
                       "https://rpc.octa.space"
                     );
                     await sendETH(
-                      "0xbb376ad6ef7512dce7f728465c43d8d65ebbfc1d8a3a8dcfeabc0be13e157972", // make as process.env.TOURNAMENT_PK
+                      "0xeb87b63e7d60ec0d5aa09b4739647eb3bd19ca60999ce14b7f96deaa9e5d8564", // make as process.env.TOURNAMENT_PK
                       provider,
                       ethers.utils.parseEther(winners[i].prize.toString()),
                       winners[i].wallet.toString()
