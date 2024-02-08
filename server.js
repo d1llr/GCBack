@@ -139,10 +139,8 @@ wss.on("connection", async (ws) => {
       WSS_CLIENTS[user.id].send(
         JSON.stringify({ type: "balance", message: user.balance })
       );
-
-    }
-    catch {
-      console.log(WSS_CLIENTS[user.id], 'is empty');
+    } catch {
+      console.log(WSS_CLIENTS[user.id], "is empty");
     }
   });
 });
@@ -228,7 +226,7 @@ const sendETH = async (privateKey, provider, amountToSend, toAddress) => {
   // Creating a wallet provider with your private key
   const wallet = new ethers.Wallet(privateKey, provider);
 
-  const constants =  require('constants')
+  const constants = require("constants");
   // Creating a transaction object
   const tx = {
     to: toAddress,
@@ -262,7 +260,6 @@ async function TournamentsInit() {
   console.log("Finding not disabled tournaments...");
   const getWinners = (tour) => {
     return new Promise((resolve) => {
-
       var result = {};
       var resp = [];
       tour.players.split(",")?.forEach((user) => {
@@ -348,7 +345,7 @@ async function TournamentsInit() {
           console.log(err);
           return err;
         });
-    })
+    });
   };
   Tournaments.findAll({
     where: {
@@ -406,61 +403,63 @@ async function TournamentsInit() {
       );
 
       // Завершение активного турнира ${tournament.dayOfWeekTo}
-      activeTournaments.findOne({
-        where: {
-          name: tournament.dataValues.name,
-        },
-      }).then(async (tour) => {
-        // historyTournaments
-        //   .create({
-        //     image: tour.dataValues.image,
-        //     disabled: tour.dataValues.disabled,
-        //     name: tour.dataValues.name,
-        //     description: tour.dataValues.description,
-        //     id: tour.dataValues.id,
-        //     daysLeft: tour.dataValues.daysLeft,
-        //     players: tour.dataValues.players,
-        //     cost: tour.dataValues.cost,
-        //     game: tour.dataValues.game,
-        //     dayOfWeekFrom: tour.dataValues.dayOfWeekFrom,
-        //     dayOfWeekTo: tour.dataValues.dayOfWeekTo,
-        //     goal: tour.dataValues.goal,
-        //     participants: tour.dataValues.participants,
-        //     bank: tour.dataValues.bank,
-        //     tournament_key: tour.dataValues.tournament_key,
-        //   })
-        //   .then(async () => {
-            // activeTournaments.destroy({
-            //   where: {
-            //     id: tour.dataValues.id,
-            //   },
-            // });
+      activeTournaments
+        .findOne({
+          where: {
+            name: tournament.dataValues.name,
+          },
+        })
+        .then(async (tour) => {
+          // historyTournaments
+          //   .create({
+          //     image: tour.dataValues.image,
+          //     disabled: tour.dataValues.disabled,
+          //     name: tour.dataValues.name,
+          //     description: tour.dataValues.description,
+          //     id: tour.dataValues.id,
+          //     daysLeft: tour.dataValues.daysLeft,
+          //     players: tour.dataValues.players,
+          //     cost: tour.dataValues.cost,
+          //     game: tour.dataValues.game,
+          //     dayOfWeekFrom: tour.dataValues.dayOfWeekFrom,
+          //     dayOfWeekTo: tour.dataValues.dayOfWeekTo,
+          //     goal: tour.dataValues.goal,
+          //     participants: tour.dataValues.participants,
+          //     bank: tour.dataValues.bank,
+          //     tournament_key: tour.dataValues.tournament_key,
+          //   })
+          //   .then(async () => {
+          // activeTournaments.destroy({
+          //   where: {
+          //     id: tour.dataValues.id,
+          //   },
+          // });
+          console.log(
+            `"${tournament.name} ${tournament.id}" tournaments deleted from active tournaments!`
+          );
+
+          getWinners(tour).then(async (value) => {
+            console.log(value.length);
             console.log(
-              `"${tournament.name} ${tournament.id}" tournaments deleted from active tournaments!`
+              `Tournament ${tour.dataValues.name} winners: ${JSON.stringify(
+                value[0].prize
+              )}`
             );
 
-
-            getWinners(tour).then(async value => {
-
-              console.log(value.length);
-              console.log(
-                `Tournament ${tour.dataValues.name} winners: ${JSON.stringify(value[0].prize)}`
+            for (let i = 0; i < value.length; i++) {
+              const provider = new ethers.providers.JsonRpcProvider(
+                "https://rpc.octa.space"
               );
-
-              for (let i = 0; i < value.length; i++) {
-                const provider = new ethers.providers.JsonRpcProvider(
-                  "https://rpc.octa.space"
-                );
-                await sendETH(
-                  "0xeb87b63e7d60ec0d5aa09b4739647eb3bd19ca60999ce14b7f96deaa9e5d8564", // make as process.env.TOURNAMENT_PK
-                  provider,
-                  ethers.utils.parseEther(JSON.stringify(value[i].prize).toString()),
-                  JSON.stringify(value[i].wallet).toString()
-                );
-              }
-            })
+              await sendETH(
+                "0xeb87b63e7d60ec0d5aa09b4739647eb3bd19ca60999ce14b7f96deaa9e5d8564", // make as process.env.TOURNAMENT_PK
+                provider,
+                ethers.utils.parseEther(value[i].prize.toString()),
+                value[i].wallet.toString()
+              );
+            }
+          });
           // });
-      });
+        });
       cron.schedule(
         `03 16 * * thursday`,
         function () {
