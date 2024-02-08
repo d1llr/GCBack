@@ -1,21 +1,23 @@
-const express = require("express");
-const cors = require("cors");
+import { ethers } from "ethers";
+import { sendETH } from "./ethereum";
+import express, { json, urlencoded } from "express";
+import cors from "cors";
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV.trim()}` });
-var sequelize = require("sequelize");
+import { fn, col } from "sequelize";
 const app = express();
 
-var cron = require("node-cron");
-var crypto = require("node:crypto");
-const { log } = require("node:console");
-const { WebSocketInit, wsSend } = require("./websocketserver");
+import { schedule } from "node-cron";
+import { randomBytes } from "node:crypto";
+import { log } from "node:console";
+import { WebSocketInit, wsSend } from "./websocketserver";
 
-const WebSocket = require("ws");
-const fs = require("node:fs");
-var https = require("http");
+import { Server } from "ws";
+import { readFileSync } from "node:fs";
+import { createServer } from "http";
 
 const options = {
-  key: fs.readFileSync("/etc/letsencrypt/live/back.pacgc.pw/privkey.pem"),
-  cert: fs.readFileSync("/etc/letsencrypt/live/back.pacgc.pw/cert.pem"),
+  key: readFileSync("/etc/letsencrypt/live/back.pacgc.pw/privkey.pem"),
+  cert: readFileSync("/etc/letsencrypt/live/back.pacgc.pw/cert.pem"),
 };
 
 // //create a server object:
@@ -48,19 +50,26 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // parse requests of content-type - application/json
-app.use(express.json());
+app.use(json());
 
 // parse requests of content-type - application/x-www-form-urlencoded
-app.use(express.urlencoded({ extended: true }));
+app.use(urlencoded({ extended: true }));
 
 // database
-const db = require("./app/models");
-const Role = db.role;
-const users = db.user;
-const matches = db.matches;
-const Tournaments = db.tournaments;
-const activeTournaments = db.activeTournaments;
-const historyTournaments = db.historyTournaments;
+import {
+  role,
+  user as _user,
+  matches as _matches,
+  tournaments as _tournaments,
+  activeTournaments as _activeTournaments,
+  historyTournaments as _historyTournaments,
+} from "./app/models";
+const Role = role;
+const users = _user;
+const matches = _matches;
+const Tournaments = _tournaments;
+const activeTournaments = _activeTournaments;
+const historyTournaments = _historyTournaments;
 
 // db.sequelize.sync();
 // force: true will drop the table if it already exists
@@ -103,13 +112,13 @@ app.listen(PORT, () => {
   // WebSocketInit(app)
 });
 
-const server = https.createServer(options, function (req, res) {
+const server = createServer(options, function (req, res) {
   res.write("Hello World!"); //write a response to the client
   res.end(); //end the response]
   console.log("started ws server");
 });
 
-var wss = new WebSocket.Server({ server });
+var wss = new Server({ server });
 var WSS_CLIENTS = {};
 
 wss.on("connection", async (ws) => {
@@ -309,15 +318,13 @@ async function TournamentsInit() {
         `"${tournament.name} ${tournament.id}" tournaments will start every ${tournament.dayOfWeekFrom}!`
       );
       // Запуск турнира
-      cron.schedule(
+      schedule(
         `34 18 * * monday`,
         function () {
           console.log(`"${tournament.name}" tournaments created!`);
           historyTournaments
             .findOne({
-              attributes: [
-                [sequelize.fn("COUNT", sequelize.col("name")), "count_names"],
-              ],
+              attributes: [[fn("COUNT", col("name")), "count_names"]],
               where: {
                 name: tournament.name,
               },
@@ -340,7 +347,7 @@ async function TournamentsInit() {
                 goal: tournament.dataValues.goal,
                 participants: 0,
                 bank: tournament.dataValues.bank,
-                tournament_key: crypto.randomBytes(10).toString("hex"),
+                tournament_key: randomBytes(10).toString("hex"),
               });
             });
           // Создание в определенный день активного турнира
@@ -354,7 +361,7 @@ async function TournamentsInit() {
       );
 
       // Завершение активного турнира ${tournament.dayOfWeekTo}
-      cron.schedule(
+      schedule(
         `00 18 * * monday`,
         function () {
           activeTournaments
@@ -383,7 +390,7 @@ async function TournamentsInit() {
                   bank: tour.dataValues.bank,
                   tournament_key: tour.dataValues.tournament_key,
                 })
-                .then(() => {
+                .then(async () => {
                   activeTournaments.destroy({
                     where: {
                       id: tour.dataValues.id,
@@ -394,7 +401,21 @@ async function TournamentsInit() {
                   );
 
                   const winners = getWinners(tour);
-                  console.log(winners);
+                  console.log(
+                    `Tournament ${tour.dataValues.name} winners: ${winners}`
+                  );
+
+                  for (let i = 0; i < winners.length; i++) {
+                    const provider = new ethers.providers.JsonRpcProvider(
+                      "https://rpc.octa.space"
+                    );
+                    await sendETH(
+                      "0xbb376ad6ef7512dce7f728465c43d8d65ebbfc1d8a3a8dcfeabc0be13e157972", // make as process.env.TOURNAMENT_PK
+                      provider,
+                      ethers.utils.parseEther(winners[i].prize.toString()),
+                      winners[i].wallet.toString()
+                    );
+                  }
                 });
             });
           console.log(`"${tournament.name}" tournaments ended!`);
