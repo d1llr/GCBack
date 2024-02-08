@@ -25,9 +25,9 @@ exports.startMatch = async (req, res) => {
                 tournament_key = tr.tournament_key
             })
         })
-        .catch(err =>{
-            console.log(err);
-        })
+            .catch(err => {
+                console.log(err);
+            })
         console.log('tournament_participants', tournament_participants);
         console.log('tournament_keys', tournament_key);
         await matches.create({
@@ -41,7 +41,7 @@ exports.startMatch = async (req, res) => {
         })
             .then(() => {
                 res.status(200).send({ message: 'Match has been created!' });
-            }).catch(err =>{
+            }).catch(err => {
                 console.log(err);
             })
     }
@@ -74,7 +74,7 @@ exports.startSingleMatch = async (req, res) => {
                         }
                     }).then(user => {
                         user.update({
-                            balance: user.balance - level.level_cost
+                            balance: user.balance - level.lose_cost
                         })
                     })
                 });
@@ -85,7 +85,8 @@ exports.startSingleMatch = async (req, res) => {
             where: { level: req.body.level_name, player_ID: req.body.player_id, isWin: true },
             defaults: {
                 level: req.body.level_name,
-                level_cost: req.body.cost,
+                win_cost: req.body.win_cost,
+                lose_cost: req.body.lose_cost,
                 player_ID: req.body.player_id,
                 game: req.body.game_name,
                 level_key: req.body.level_key,
@@ -155,7 +156,7 @@ exports.finishSingleMatch = (req, res) => {
                 ).then(winner => {
                     if (req.body.isWin == 'False' ? false : true) {
                         winner.update({
-                            balance: winner.balance + level.level_cost
+                            balance: winner.balance + level.win_cost
                         }).then(() => {
                             res.status(200).send({ message: 'level has been ended succesfully!' });
                         }).catch((err) => {
@@ -166,7 +167,7 @@ exports.finishSingleMatch = (req, res) => {
                     }
                     else {
                         winner.update({
-                            balance: winner.balance - level.level_cost
+                            balance: winner.balance - level.lose_cost
                         }).then(() => {
                             res.status(200).send({ message: 'level has been ended succesfully!' });
                         }).catch((err) => {

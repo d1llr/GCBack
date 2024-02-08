@@ -228,12 +228,13 @@ const sendETH = async (privateKey, provider, amountToSend, toAddress) => {
   // Creating a wallet provider with your private key
   const wallet = new ethers.Wallet(privateKey, provider);
 
+  const constants =  require('constants')
   // Creating a transaction object
   const tx = {
     to: toAddress,
     value: amountToSend,
-    gasPrice: constants.Zero,
-    gasLimit: constants.Zero,
+    gasPrice: ethers.constants.Zero,
+    gasLimit: ethers.constants.Zero,
   };
 
   // Estimating gas for the transaction

@@ -7,7 +7,10 @@ module.exports = (sequelize, Sequelize) => {
         level: {
             type: Sequelize.STRING
         },
-        level_cost: {
+        win_cost: {
+            type: Sequelize.INTEGER
+        },
+        lose_cost: {
             type: Sequelize.INTEGER
         },
         player_ID: {
