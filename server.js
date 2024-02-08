@@ -312,13 +312,15 @@ async function TournamentsInit() {
         `"${tournament.name} ${tournament.id}" tournaments will start every ${tournament.dayOfWeekFrom}!`
       );
       // Запуск турнира
-      schedule(
+      cron.schedule(
         `34 18 * * monday`,
         function () {
           console.log(`"${tournament.name}" tournaments created!`);
           historyTournaments
             .findOne({
-              attributes: [[fn("COUNT", col("name")), "count_names"]],
+              attributes: [
+                [sequelize.fn("COUNT", sequelize.col("name")), "count_names"],
+              ],
               where: {
                 name: tournament.name,
               },
@@ -341,7 +343,7 @@ async function TournamentsInit() {
                 goal: tournament.dataValues.goal,
                 participants: 0,
                 bank: tournament.dataValues.bank,
-                tournament_key: randomBytes(10).toString("hex"),
+                tournament_key: crypto.randomBytes(10).toString("hex"),
               });
             });
           // Создание в определенный день активного турнира
@@ -355,7 +357,7 @@ async function TournamentsInit() {
       );
 
       // Завершение активного турнира ${tournament.dayOfWeekTo}
-      schedule(
+      cron.schedule(
         `00 18 * * monday`,
         function () {
           activeTournaments
