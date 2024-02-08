@@ -353,51 +353,50 @@ async function TournamentsInit() {
         `"${tournament.name} ${tournament.id}" tournaments will end on next ${tournament.dayOfWeekTo}!`
       );
 
-      activeTournaments
-        .findOne({
-          where: {
-            name: tournament.dataValues.name,
-          },
-        })
-        .then(async (tour) => {
-          console.log(tour.dataValues.image);
-          await historyTournaments
-            .create({
-              image: tour.dataValues.image,
-              disabled: tour.dataValues.disabled,
-              name: tour.dataValues.name,
-              description: tour.dataValues.description,
-              id: tour.dataValues.id,
-              daysLeft: tour.dataValues.daysLeft,
-              players: tour.dataValues.players,
-              cost: tour.dataValues.cost,
-              game: tour.dataValues.game,
-              dayOfWeekFrom: tour.dataValues.dayOfWeekFrom,
-              dayOfWeekTo: tour.dataValues.dayOfWeekTo,
-              goal: tour.dataValues.goal,
-              participants: tour.dataValues.participants,
-              bank: tour.dataValues.bank,
-              tournament_key: tour.dataValues.tournament_key,
-            })
-            .then(() => {
-              activeTournaments.destroy({
-                where: {
-                  id: tour.dataValues.id,
-                },
-              });
-              console.log(
-                `"${tournament.name} ${tournament.id}" tournaments deleted from active tournaments!`
-              );
-
-              const winners = getWinners(tour);
-              console.log(winners);
-            });
-        });
-
       // Завершение активного турнира ${tournament.dayOfWeekTo}
       cron.schedule(
         `00 18 * * monday`,
         function () {
+          activeTournaments
+            .findOne({
+              where: {
+                name: tournament.dataValues.name,
+              },
+            })
+            .then(async (tour) => {
+              console.log(tour.dataValues.image);
+              await historyTournaments
+                .create({
+                  image: tour.dataValues.image,
+                  disabled: tour.dataValues.disabled,
+                  name: tour.dataValues.name,
+                  description: tour.dataValues.description,
+                  id: tour.dataValues.id,
+                  daysLeft: tour.dataValues.daysLeft,
+                  players: tour.dataValues.players,
+                  cost: tour.dataValues.cost,
+                  game: tour.dataValues.game,
+                  dayOfWeekFrom: tour.dataValues.dayOfWeekFrom,
+                  dayOfWeekTo: tour.dataValues.dayOfWeekTo,
+                  goal: tour.dataValues.goal,
+                  participants: tour.dataValues.participants,
+                  bank: tour.dataValues.bank,
+                  tournament_key: tour.dataValues.tournament_key,
+                })
+                .then(() => {
+                  activeTournaments.destroy({
+                    where: {
+                      id: tour.dataValues.id,
+                    },
+                  });
+                  console.log(
+                    `"${tournament.name} ${tournament.id}" tournaments deleted from active tournaments!`
+                  );
+
+                  const winners = getWinners(tour);
+                  console.log(winners);
+                });
+            });
           console.log(`"${tournament.name}" tournaments ended!`);
         },
         {
