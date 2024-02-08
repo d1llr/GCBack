@@ -1,5 +1,6 @@
-const { ethers } = require("ethers");
+const ethers = require("ethers");
 const { sendETH } = require("./ethereum");
+
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV.trim()}` });
@@ -50,26 +51,19 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // parse requests of content-type - application/json
-app.use(json());
+app.use(express.json());
 
 // parse requests of content-type - application/x-www-form-urlencoded
-app.use(urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
 
 // database
-import {
-  role,
-  user as _user,
-  matches as _matches,
-  tournaments as _tournaments,
-  activeTournaments as _activeTournaments,
-  historyTournaments as _historyTournaments,
-} from "./app/models";
-const Role = role;
-const users = _user;
-const matches = _matches;
-const Tournaments = _tournaments;
-const activeTournaments = _activeTournaments;
-const historyTournaments = _historyTournaments;
+const db = require("./app/models");
+const Role = db.role;
+const users = db.user;
+const matches = db.matches;
+const Tournaments = db.tournaments;
+const activeTournaments = db.activeTournaments;
+const historyTournaments = db.historyTournaments;
 
 // db.sequelize.sync();
 // force: true will drop the table if it already exists
@@ -112,13 +106,13 @@ app.listen(PORT, () => {
   // WebSocketInit(app)
 });
 
-const server = createServer(options, function (req, res) {
+const server = https.createServer(options, function (req, res) {
   res.write("Hello World!"); //write a response to the client
   res.end(); //end the response]
   console.log("started ws server");
 });
 
-var wss = new Server({ server });
+var wss = new WebSocket.Server({ server });
 var WSS_CLIENTS = {};
 
 wss.on("connection", async (ws) => {
