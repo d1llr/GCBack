@@ -441,9 +441,9 @@ async function TournamentsInit() {
           getWinners(tour).then(async (value) => {
             console.log(value.length);
             console.log(
-              `Tournament ${tour.dataValues.name} winners: ${JSON.stringify(
-                value[0].prize
-              )}`
+              `Tournament ${
+                tour.dataValues.name
+              } winners: ${ethers.utils.parseEther(value[i].prize.toString())}`
             );
 
             for (let i = 0; i < value.length; i++) {
