@@ -51,8 +51,8 @@ exports.Purchases = (req, res) => {
         }).then(u => {
           if (u.balance >= req.body.cost) {
             if (Number(req.body.cost) > 0) {
-              u.decrement('balance', {
-                by: Number(req.body.cost)
+              u.update({
+                balance: u.balance - Number(req.body.cost)
               })
                 .then(() => {
                   res.status(200).json({
@@ -177,10 +177,14 @@ exports.getBalance = (req, res) => {
         id: req.params["id"]
       }
     }).then(founded => {
-      res.status(202).json(founded.balance);
+      console.log('balance :', founded.balance);
+      
+      res.send(founded.balance.toString());
     })
       .catch((err) => {
-        res.status(402).send(err);
+        console.log('balance err :', err);
+
+        res.status(402).send({message: 'Error'});
       })
   }
   catch {
@@ -198,8 +202,8 @@ exports.rechargeBalance = (req, res) => {
         id: req.body.id
       }
     }).then(u => {
-      u.increment('balance', {
-        by: Number(req.body.amount)
+      u.update({
+        balance: u.balance + Number(req.body.amount)
       })
         .then(() => {
           res.status(200).json({
@@ -228,8 +232,8 @@ exports.withdrawBalance = (req, res) => {
       }
     }).then(u => {
       if (u.balance >= req.body.amount) {
-        u.decrement('balance', {
-          by: Number(req.body.amount)
+        u.update({
+          balance: u.balance - Number(req.body.amount)
         })
           .then(() => {
             res.status(200).json({

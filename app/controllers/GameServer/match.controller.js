@@ -15,8 +15,8 @@ exports.startMatch = async (req, res) => {
             }
         }).then(tours => {
             tours.map(tr => {
-                let tournament_players = tr.players.split(',')
-                let match_players = req.body.player_IDs.split(',')
+                let tournament_players = tr.players?.split(',')
+                let match_players = req.body.player_IDs?.split(',')
                 match_players.forEach(player => {
                     if (tournament_players.includes(player)) {
                         tournament_participants.push(player)
@@ -24,6 +24,9 @@ exports.startMatch = async (req, res) => {
                 });
                 tournament_key = tr.tournament_key
             })
+        })
+        .catch(err =>{
+            console.log(err);
         })
         console.log('tournament_participants', tournament_participants);
         console.log('tournament_keys', tournament_key);
@@ -38,6 +41,8 @@ exports.startMatch = async (req, res) => {
         })
             .then(() => {
                 res.status(200).send({ message: 'Match has been created!' });
+            }).catch(err =>{
+                console.log(err);
             })
     }
     catch {
@@ -68,8 +73,8 @@ exports.startSingleMatch = async (req, res) => {
                             id: level.player_ID
                         }
                     }).then(user => {
-                        user.decrement('balance', {
-                            by: level.level_cost
+                        user.update({
+                            balance: user.balance - level.level_cost
                         })
                     })
                 });
@@ -149,8 +154,8 @@ exports.finishSingleMatch = (req, res) => {
                     }
                 ).then(winner => {
                     if (req.body.isWin == 'False' ? false : true) {
-                        winner.increment('balance', {
-                            by: level.level_cost
+                        winner.update({
+                            balance: winner.balance + level.level_cost
                         }).then(() => {
                             res.status(200).send({ message: 'level has been ended succesfully!' });
                         }).catch((err) => {
@@ -160,8 +165,8 @@ exports.finishSingleMatch = (req, res) => {
                         })
                     }
                     else {
-                        winner.decrement('balance', {
-                            by: level.level_cost
+                        winner.update({
+                            balance: winner.balance - level.level_cost
                         }).then(() => {
                             res.status(200).send({ message: 'level has been ended succesfully!' });
                         }).catch((err) => {
@@ -215,8 +220,8 @@ exports.finishMatch = (req, res) => {
                             }
                         }
                     ).then(winner => {
-                        winner.increment('balance', {
-                            by: match.match_cost * players_count
+                        winner.update({
+                            balance: winner.balance + (match.match_cost * players_count)
                         }).then(() => {
                             res.status(200).send({ message: 'Match has been ended succesfully!' });
                         }).catch((err) => {
@@ -238,10 +243,10 @@ exports.finishMatch = (req, res) => {
                     }
                 }).then(user_arr => {
                     user_arr.map(user => {
-                        user.decrement('balance', {
-                            by: match.match_cost
+                        user.update({
+                            balance: user.balance - match.match_cost
                         }).then(() => {
-                            res.status(200).send({ message: 'Match has been ended succesfully!' });
+
                         }).catch((err) => {
                             console.log(err);
                             res.status(503).send({ message: 'Looser balance not decremented!' });

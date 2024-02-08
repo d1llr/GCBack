@@ -87,10 +87,41 @@ exports.getParticipate = (req, res) => {
             id: req.body.user_id.toString()
           }
         }).then(async user => {
-          await user.decrement('balance', {
-            by: Number(founded.cost)
-          }).then(()=>{
-            sendMessage(user.balance)
+          await user.update({
+            balance: user.balance - founded.cost
+          }).then(() => {
+            // function initial() {
+            //   users.findOne({
+            //     where: {
+            //       id: 1
+            //     }
+            
+            //   }).then(user => {
+            //     user.update({
+            //       balance: user.balance - 1
+            //     })
+            //   })
+            //   // Role.create({
+            //   //   id: 1,
+            //   //   name: "user"
+            //   // });
+            
+            //   // Role.create({
+            //   //   id: 2,
+            //   //   name: "moderator"
+            //   // });
+            
+            //   // Role.create({
+            //   //   id: 3,
+            //   //   name: "admin"
+            //   // });
+            // }
+            // var cron = require('node-cron');
+            // cron.schedule(`*/3 * * * * *`, function () {
+            //   initial()
+            // }, {
+            //   timezone: "Europe/Moscow"
+            // });
           })
           // users.afterBulkUpdate(user => {
           //   console.log('user updated');

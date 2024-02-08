@@ -19,6 +19,7 @@ module.exports = (sequelize, Sequelize) => {
     players: {
       type: Sequelize.STRING
     },
+
     cost: {
       type: Sequelize.INTEGER
     },
