@@ -16,6 +16,12 @@ module.exports = (sequelize, Sequelize) => {
       type: Sequelize.STRING,
       primaryKey: true
     },
+    address:{
+      type: Sequelize.STRING
+    },
+    chainID:{
+      type: Sequelize.STRING
+    },
     players: {
       type: Sequelize.STRING
     },

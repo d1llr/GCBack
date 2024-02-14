@@ -19,7 +19,12 @@ module.exports = (sequelize, Sequelize) => {
     players: {
       type: Sequelize.STRING
     },
-
+    address:{
+      type: Sequelize.STRING
+    },
+    chainID:{
+      type: Sequelize.STRING
+    },
     cost: {
       type: Sequelize.INTEGER
     },

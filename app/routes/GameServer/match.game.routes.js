@@ -23,5 +23,8 @@ module.exports = function (app) {
 
     app.get("/api/user/singleMatch/getLastLevel/:id", [authJwt.verifyToken], controller.getLastLevel);
 
+    app.get("/api/user/singleMatch/getLastLevel/:game_name/:id", [authJwt.verifyToken], controller.getLastLevel_v2);
+
+
 
 };

@@ -59,6 +59,7 @@ const db = require("./app/models");
 const { resolve } = require("node:path");
 const Role = db.role;
 const users = db.user;
+const levels = db.levels;
 const matches = db.matches;
 const Tournaments = db.tournaments;
 const activeTournaments = db.activeTournaments;
@@ -153,6 +154,7 @@ wss.on("connection", async (ws) => {
 
 server.listen(7070, function () {
   console.log("Server is running on port 7070");
+  // initial()
 });
 
 // export const wsSend = function (data) {
@@ -170,32 +172,31 @@ server.listen(7070, function () {
 //   console.log('Server is running on port 7070');
 // });
 
-function initial() {
-  users
-    .findOne({
-      where: {
-        id: 1,
-      },
-    })
-    .then((user) => {
-      user.update({
-        balance: user.balance - 1,
-      });
-    });
-  // Role.create({
-  //   id: 1,
-  //   name: "user"
-  // });
+const nodemailer = require("nodemailer");
+async function initial() {
 
-  // Role.create({
-  //   id: 2,
-  //   name: "moderator"
-  // });
+  const transporter = nodemailer.createTransport({
+    host: "smtp.mail.selcloud.ru",
+    port: 1127,
+    secure: true,
+    auth: {
+      // TODO: replace `user` and `pass` values from <https://forwardemail.net>
+      user: "1105",
+      pass: "AuIGq91OU2mPIzvF",
+    },
+  });
 
-  // Role.create({
-  //   id: 3,
-  //   name: "admin"
-  // });
+
+
+  const info = await transporter.sendMail({
+    from: '"test" <no-reply@pacgc.pw>', // sender address
+    to: "madramov.02@gmail.com", // list of receivers
+    subject: "Hello ✔", // Subject line
+    text: "Hello world?", // plain text body
+    html: "<b>Hello world?</b>", // html body
+  });
+
+  console.log("Message sent: %s", info.messageId);
 }
 
 // wss.on('connection', (ws) => {
@@ -284,14 +285,37 @@ async function TournamentsInit() {
               });
           });
 
-          var tuples = [];
-          for (var key in result) tuples.push([key, result[key]]);
-          tuples.sort(function (a, b) {
-            a = a[1];
-            b = b[1];
-            return a > b ? -1 : a < b ? 1 : 0;
-          });
+          const getGamesCount = async (user_id) => {
+            const { count, rows } = await levels.findAndCountAll({
+              where: {
+                tournament_participants: user_id
+              }
+            })
+            return count
+          }
 
+          let test = [['9', -11, 14], ['1', 10, 70], ['2', 30, 20], ['3', 30, 30], ['4', 30, 50]]
+          var tuples = [];
+          for (var key in result) tuples.push([key, result[key], await getGamesCount(key)]);
+          tuples.sort(function (a, b) {
+
+            if (a[1] > b[1]) {
+              return -1
+            }
+            else if (a[1] < b[1]) {
+              return 1
+            }
+            else {
+              if (a[2] > b[2]) {
+                return -1
+              }
+              else {
+                return 0
+              }
+              // return 0
+
+            }
+          });
           const findUserName = async (id) => {
             try {
               const founded_user = await users.findOne({
@@ -307,7 +331,7 @@ async function TournamentsInit() {
           for (var i = 0; i < tuples.length; i++) {
             var key = tuples[i][0];
             var value = tuples[i][1];
-            var prize = "";
+            var prize = 0;
             switch (i) {
               case 0:
                 prize = 0.1;
@@ -355,11 +379,11 @@ async function TournamentsInit() {
     console.log(`Founded ${tournaments.length} not disabled tournaments`);
     tournaments.forEach((tournament) => {
       console.log(
-        `"${tournament.name} ${tournament.id}" tournaments will start every ${tournament.dayOfWeekFrom}!`
+        `"${tournament.name} by ${tournament.id}" tournaments will start every ${tournament.dayOfWeekFrom}!`
       );
       // Запуск турнира
       cron.schedule(
-        `34 18 * * monday`,
+        `20 16 * * ${tournament.dayOfWeekFrom}`,
         function () {
           console.log(`"${tournament.name}" tournaments created!`);
           historyTournaments
@@ -372,17 +396,16 @@ async function TournamentsInit() {
               },
             })
             .then((hist_founded) => {
-              console.log("founded ", hist_founded.dataValues.count_names);
               activeTournaments.create({
                 image: tournament.dataValues.image,
                 disabled: tournament.dataValues.disabled,
                 name: tournament.dataValues.name,
                 description: tournament.dataValues.description,
                 daysLeft: tournament.dataValues.daysLeft,
-                id:
-                  tournament.dataValues.id +
-                  hist_founded.dataValues.count_names,
+                id: 1 + Number(hist_founded.dataValues.count_names),
                 cost: tournament.dataValues.cost,
+                address: tournament.dataValues.address,
+                chainID: tournament.dataValues.chainID,
                 game: tournament.dataValues.game,
                 dayOfWeekFrom: tournament.dataValues.dayOfWeekFrom,
                 dayOfWeekTo: tournament.dataValues.dayOfWeekTo,
@@ -399,14 +422,14 @@ async function TournamentsInit() {
         }
       );
       console.log(
-        `"${tournament.name} ${tournament.id}" tournaments will end on next ${tournament.dayOfWeekTo}!`
+        `"${tournament.name} by ${tournament.id}" tournaments will end on next ${tournament.dayOfWeekTo}!`
       );
 
       // Завершение активного турнира ${tournament.dayOfWeekTo}
       cron.schedule(
-        `03 16 * * thursday`,
+        `20 16 * * ${tournament.dayOfWeekTo}`,
         function () {
-          console.log(tour.dataValues.image);
+          console.log('Завершение активного турнира');
           activeTournaments
             .findOne({
               where: {
@@ -425,6 +448,8 @@ async function TournamentsInit() {
                   players: tour.dataValues.players,
                   cost: tour.dataValues.cost,
                   game: tour.dataValues.game,
+                  address: tour.dataValues.address,
+                  chainID: tour.dataValues.chainID,
                   dayOfWeekFrom: tour.dataValues.dayOfWeekFrom,
                   dayOfWeekTo: tour.dataValues.dayOfWeekTo,
                   goal: tour.dataValues.goal,

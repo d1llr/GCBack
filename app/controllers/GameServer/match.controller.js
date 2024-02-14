@@ -55,6 +55,35 @@ exports.startSingleMatch = async (req, res) => {
     console.log(`Trying to start level ${req.body.level_key}`);
 
     try {
+
+
+        var tournament_participants = ''
+        var tournament_key = ''
+        await activeTournaments.findAll({
+            where: {
+                game: req.body.game_name
+            }
+        }).then(async tours => {
+            await tours.map(tr => {
+                let tournament_players = tr.players.split(',')
+                console.log(tournament_players);
+                
+                let match_player = req.body.player_id
+                console.log(typeof match_player);
+                console.log(tournament_players.includes(match_player));
+                if (tournament_players.includes(match_player)) {
+                    console.log('this is tournaments player!');
+                    tournament_participants = match_player
+                    tournament_key = tr.tournament_key
+                }
+            })
+        })
+            .catch(err => {
+                console.log(err);
+            })
+
+
+        // проверка на незаконченные уровни у пользователя, в случае если он ливнул, баланс все равно спишется после
         await levels.findAll({
             where: {
                 level: req.body.level_name,
@@ -81,20 +110,25 @@ exports.startSingleMatch = async (req, res) => {
             }).catch(err => {
                 console.log(err);
             })
+        console.log(req.body);
         const [user, created] = await levels.findOrCreate({
-            where: { level: req.body.level_name, player_ID: req.body.player_id, isWin: true },
+            where: { level: req.body.level_name, player_ID: req.body.player_id, isWin: true, game: req.body.game_name },
             defaults: {
                 level: req.body.level_name,
                 win_cost: req.body.win_cost,
                 lose_cost: req.body.lose_cost,
                 player_ID: req.body.player_id,
+                tournament_key: tournament_key,
+                tournament_participants: tournament_participants,
                 game: req.body.game_name,
                 level_key: req.body.level_key,
                 isWin: null
             }
+        }).catch(err =>{
+            console.log(err);
         })
 
-        console.log(user);
+        // Проверка на создание, если такой лвл есть, то вернется error, если лвла нет, то он создасться. 1 вариант практически невозможен, так как при начале каждого уровня идет проверка getLastLevel, своеобразный middleware
         if (created) {
             res.status(200).send({ message: 'Level has been created!' });
         }
@@ -109,17 +143,43 @@ exports.startSingleMatch = async (req, res) => {
 
 exports.getLastLevel = (req, res) => {
     try {
-        console.log();
+        console.log(req.body);
         if (req.params['id'])
             levels.max('level', {
                 where: {
                     player_ID: req.params['id'],
                     isWin: true,
-                    end: true
+                    end: true,
+                    game: '3inRow'
                 }
             })
                 .then(level => {
                     console.log('level', level);
+                    res.status(200).json(level);
+                })
+                .catch(err => {
+                    res.status(200).json(0);
+                })
+        else res.status(500).send({ message: 'Level error!' });
+    }
+    catch {
+        res.status(500).send({ message: 'Level error!' });
+    };
+};
+
+
+exports.getLastLevel_v2 = (req, res) => {
+    try {
+        if (req.params['id'] && req.params['game_name'])
+            levels.max('level', {
+                where: {
+                    player_ID: req.params['id'],
+                    isWin: true,
+                    game: req.params['game_name'],
+                    end: true
+                }
+            })
+                .then(level => {
                     res.status(200).json(level);
                 })
                 .catch(err => {

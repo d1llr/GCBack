@@ -34,6 +34,12 @@ module.exports = (sequelize, Sequelize) => {
     goal: {
       type: Sequelize.STRING
     },
+    address:{
+      type: Sequelize.STRING
+    },
+    chainID:{
+      type: Sequelize.STRING
+    },
     participants: {
       type: Sequelize.STRING
     },

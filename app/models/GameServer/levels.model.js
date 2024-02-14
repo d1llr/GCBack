@@ -16,6 +16,12 @@ module.exports = (sequelize, Sequelize) => {
         player_ID: {
             type: Sequelize.STRING
         },
+        tournament_key: {
+            type: Sequelize.STRING
+        },
+        tournament_participants: {
+            type: Sequelize.STRING
+        },
         end: {
             type: Sequelize.BOOLEAN
         },
