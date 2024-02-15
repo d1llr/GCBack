@@ -6,9 +6,10 @@ const Op = db.Sequelize.Op;
 
 exports.startMatch = async (req, res) => {
     try {
-
+        console.log('Trying to start pvp match');
         var tournament_participants = []
         var tournament_key = ''
+        // Проверка на участие пользователей в турнире
         await activeTournaments.findAll({
             where: {
                 game: req.body.game_name
@@ -22,14 +23,15 @@ exports.startMatch = async (req, res) => {
                         tournament_participants.push(player)
                     }
                 });
+                // Возможно место ошибки, когда участник, не участвующий в турнире, будет считатьтся как участник турнира
                 tournament_key = tr.tournament_key
+                //
             })
         })
             .catch(err => {
                 console.log(err);
             })
-        console.log('tournament_participants', tournament_participants);
-        console.log('tournament_keys', tournament_key);
+        // создание матча
         await matches.create({
             match_key: req.body.match_key,
             match_name: req.body.match_name,
@@ -52,13 +54,11 @@ exports.startMatch = async (req, res) => {
 
 // тут может быть баг с созданием, потому что нода ругается  TypeError: Cannot convert undefined or null to object
 exports.startSingleMatch = async (req, res) => {
-    console.log(`Trying to start level ${req.body.level_key}`);
-
+    console.log(`Trying to start level ${req.body.level_name} in the ${req.body.game_name} by user ${req.body.player_id}`);
     try {
-
-
         var tournament_participants = ''
         var tournament_key = ''
+        // провека участников на участие в турнире
         await activeTournaments.findAll({
             where: {
                 game: req.body.game_name
@@ -66,11 +66,7 @@ exports.startSingleMatch = async (req, res) => {
         }).then(async tours => {
             await tours.map(tr => {
                 let tournament_players = tr.players.split(',')
-                console.log(tournament_players);
-                
                 let match_player = req.body.player_id
-                console.log(typeof match_player);
-                console.log(tournament_players.includes(match_player));
                 if (tournament_players.includes(match_player)) {
                     console.log('this is tournaments player!');
                     tournament_participants = match_player
@@ -110,7 +106,7 @@ exports.startSingleMatch = async (req, res) => {
             }).catch(err => {
                 console.log(err);
             })
-        console.log(req.body);
+        console.log('Поиск лвла в базе/создание лвла');
         const [user, created] = await levels.findOrCreate({
             where: { level: req.body.level_name, player_ID: req.body.player_id, isWin: true, game: req.body.game_name },
             defaults: {
@@ -124,7 +120,7 @@ exports.startSingleMatch = async (req, res) => {
                 level_key: req.body.level_key,
                 isWin: null
             }
-        }).catch(err =>{
+        }).catch(err => {
             console.log(err);
         })
 
@@ -143,7 +139,7 @@ exports.startSingleMatch = async (req, res) => {
 
 exports.getLastLevel = (req, res) => {
     try {
-        console.log(req.body);
+        console.log('Getting last level of the game [3 in row] {archived}');
         if (req.params['id'])
             levels.max('level', {
                 where: {
@@ -154,7 +150,6 @@ exports.getLastLevel = (req, res) => {
                 }
             })
                 .then(level => {
-                    console.log('level', level);
                     res.status(200).json(level);
                 })
                 .catch(err => {
@@ -170,6 +165,7 @@ exports.getLastLevel = (req, res) => {
 
 exports.getLastLevel_v2 = (req, res) => {
     try {
+        console.log(`Getting last level of the ${req.params['game_name']}`);
         if (req.params['id'] && req.params['game_name'])
             levels.max('level', {
                 where: {
@@ -193,26 +189,19 @@ exports.getLastLevel_v2 = (req, res) => {
 };
 
 exports.finishSingleMatch = (req, res) => {
-    console.log(`Trying to end level ${req.body.level_key}`);
+    console.log(`Ending level ${req.body.level_key}`);
     try {
         levels.findOne({
             where: {
                 level_key: req.body.level_key
             }
         }).then(level => {
-
-            console.log(req.body);
             level.update({
                 end: true,
                 isWin: req.body.isWin == 'False' ? false : true
             }).then(() => {
                 users.findOne(
-                    {
-                        where: {
-                            id: level.player_ID
-                        }
-
-                    }
+                    {where: {id: level.player_ID}}
                 ).then(winner => {
                     if (req.body.isWin == 'False' ? false : true) {
                         winner.update({
@@ -255,6 +244,7 @@ exports.finishSingleMatch = (req, res) => {
 };
 
 exports.finishMatch = (req, res) => {
+    console.log(`Ending pvp round ${req.body.match_key}`);
     var players_count = 0;
     try {
         matches.findOne({
@@ -262,7 +252,6 @@ exports.finishMatch = (req, res) => {
                 match_key: req.body.match_key
             }
         }).then(match => {
-            console.log(req.body);
             match.update({
                 end: true,
                 winner_id: req.body.winner_id

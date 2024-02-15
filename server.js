@@ -135,11 +135,12 @@ wss.on("connection", async (ws) => {
   // wsSend(JSON.stringify({ type: 'balance', message: 'test' }), ws)
   users.afterUpdate((user, options) => {
     console.log("balance updated by user", user.id);
-    console.log("send a new balance to user id ", user.id);
+    console.log("trying to send a new balance to user id ", user.id);
     try {
       WSS_CLIENTS[user.id].send(
         JSON.stringify({ type: "balance", message: user.balance })
       );
+      console.log('balance send to user ',user.id);
     } catch {
       console.log(WSS_CLIENTS[user.id], "is empty");
     }
@@ -334,13 +335,13 @@ async function TournamentsInit() {
             var prize = 0;
             switch (i) {
               case 0:
-                prize = 0.1;
+                prize = 40;
                 break;
               case 1:
-                prize = 0.05;
+                prize = 30;
                 break;
               case 2:
-                prize = 0.01;
+                prize = 10;
                 break;
 
               default:
