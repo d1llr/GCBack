@@ -44,6 +44,38 @@ exports.signup = (req, res) => {
 
 };
 
+const nodemailer = require("nodemailer");
+exports.sendCodeOnEmail = async (req, res) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      host: "smtp.mail.selcloud.ru",
+      port: 1127,
+      secure: true,
+      auth: {
+        // TODO: replace `user` and `pass` values from <https://forwardemail.net>
+        user: "1105",
+        pass: "AuIGq91OU2mPIzvF",
+      },
+    });
+    console.log(req.body.email);
+  
+  
+    const info = await transporter.sendMail({
+      from: '"test" <no-reply@pacgc.pw>', // sender address
+      to: "madramov.02@gmail.com", // list of receivers
+      subject: "Hello ✔", // Subject line
+      text: "Hello world?", // plain text body
+      html: "<b>Hello world?</b>", // html body
+    });
+  
+    console.log("Message sent: %s", info.messageId);
+    res.status(200).send({ message: 'register could be done' });
+  }
+  catch {
+    res.status(500).send({ message: 'register failed' });
+  }
+}
+
 exports.signin = (req, res) => {
   User.findOne({
     where: {
@@ -124,7 +156,7 @@ exports.refreshToken = async (req, res) => {
     let newAccessToken = jwt.sign({ id: user.id }, config.secret, {
       expiresIn: config.jwtExpiration,
     });
-    console.log(newAccessToken);
+    console.warn(`user ${user.id} got new A/R tokens`);
     return res.status(200).json({
       accessToken: newAccessToken,
       refreshToken: refreshToken.token,

@@ -1,6 +1,6 @@
 const db = require("../models");
 const { user: user } = db;
-const { matches: matches, purchases: purchases } = db;
+const { matches: matches, purchases: purchases, activeTournaments: activeTournaments } = db;
 
 
 
@@ -34,14 +34,25 @@ exports.getUserName = (req, res) => {
 };
 
 
-exports.Purchases = (req, res) => {
-  console.log(Number(req.body.cost));
+exports.Purchases = async (req, res) => {
   try {
+    const getTournamentPlayers = async () => {
+      var tournament_key = []
+      await activeTournaments.findAll().then(tournaments => {
+        tournaments.forEach(tournament => {
+          
+          tournament.players.split(',')?.includes(req.body.user_id) && tournament_key.push(tournament.tournament_key)
+        });
+      })
+      return tournament_key.join(',')
+    }
+
     purchases.create({
       user_id: req.body.user_id,
       game: req.body.game,
       cost: req.body.cost,
       product: req.body.product,
+      tournament_key: await getTournamentPlayers()
     })
       .then(() => {
         user.findOne({
@@ -177,14 +188,12 @@ exports.getBalance = (req, res) => {
         id: req.params["id"]
       }
     }).then(founded => {
-      console.log('balance :', founded.balance);
-      
       res.send(founded.balance.toString());
     })
       .catch((err) => {
         console.log('balance err :', err);
 
-        res.status(402).send({message: 'Error'});
+        res.status(402).send({ message: 'Error' });
       })
   }
   catch {
@@ -224,6 +233,7 @@ exports.rechargeBalance = (req, res) => {
 
 exports.withdrawBalance = (req, res) => {
   // Save User to Database
+  console.log('trying to withdraw');
   console.log(req.body);
   try {
     user.findOne({

@@ -33,7 +33,6 @@ const corsOptions = {
     // Проверка, что запрос пришел от разрешенного IP-адреса
     const allowedIps = [
       "https://dev.pacgc.pw",
-      "https://pacgc.pw",
       "https://www.pacshooter.pw",
     ]; // замените на разрешенные IP-адреса
     if (!origin || allowedIps.includes(origin)) {
@@ -74,7 +73,7 @@ const historyTournaments = db.historyTournaments;
 
 // simple route
 app.get("/", (req, res) => {
-  res.json({ message: "Welcome to bezkoder application." });
+  res.json({ message: "Welcome to @rmadidntwakeup application." });
 });
 
 // expressWs(app)
@@ -99,7 +98,7 @@ require("./app/routes/GameServer/match.game.routes")(app);
 require("./app/routes/Time/time.routes")(app);
 
 // set port, listen for requests
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 9090;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}. | ${process.env.NODE_ENV} |`);
   TournamentsInit();
@@ -116,22 +115,25 @@ var wss = new WebSocket.Server({ server });
 var WSS_CLIENTS = {};
 
 wss.on("connection", async (ws) => {
-  ws.send(
-    JSON.stringify({ type: "connect", message: "wss connection successful" })
-  );
+  ws.send(JSON.stringify({ type: "connect", message: "wss connection successful" }));
+  console.log('send a new message to user');
   ws.on("message", function incoming(message) {
     const msg = JSON.parse(message);
     switch (msg.type) {
       case "auth":
         WSS_CLIENTS[msg.message] = ws;
+        WSS_CLIENTS[msg.message].on('close', function () {
+          console.log('wss connection closed by user[' + msg.message + ']');
+          delete WSS_CLIENTS[msg.message];
+        });
         break;
 
       default:
         break;
     }
     console.log("received: %s", JSON.parse(message));
+    console.log('wss clients lenght', Object.keys(WSS_CLIENTS).length);
   });
-  console.log("got new wss connection");
   // wsSend(JSON.stringify({ type: 'balance', message: 'test' }), ws)
   users.afterUpdate((user, options) => {
     console.log("balance updated by user", user.id);
@@ -140,7 +142,7 @@ wss.on("connection", async (ws) => {
       WSS_CLIENTS[user.id].send(
         JSON.stringify({ type: "balance", message: user.balance })
       );
-      console.log('balance send to user ',user.id);
+      console.log('balance send to user ', user.id);
     } catch {
       console.log(WSS_CLIENTS[user.id], "is empty");
     }
@@ -153,8 +155,8 @@ wss.on("connection", async (ws) => {
 //   timezone: "Europe/Moscow"
 // });
 
-server.listen(7070, function () {
-  console.log("Server is running on port 7070");
+server.listen(9191, function () {
+  console.log("websocker server is running on port 9191");
   // initial()
 });
 
@@ -384,7 +386,8 @@ async function TournamentsInit() {
       );
       // Запуск турнира
       cron.schedule(
-        `20 16 * * ${tournament.dayOfWeekFrom}`,
+        `21  17 * * ${tournament.dayOfWeekFrom}`,
+        
         function () {
           console.log(`"${tournament.name}" tournaments created!`);
           historyTournaments

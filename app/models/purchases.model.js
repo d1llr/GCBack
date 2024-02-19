@@ -16,6 +16,9 @@ module.exports = (sequelize, Sequelize) => {
       product: {
         type: Sequelize.STRING
       },
+      tournament_key:{
+        type: Sequelize.STRING
+      }
     });
   
     return Purchases;
