@@ -11,9 +11,9 @@ exports.signup = (req, res) => {
   // Save User to Database
   console.log(req.body);
   User.create({
-    name: req.body.name,
-    username: req.body.username,
-    email: req.body.email,
+    name: req.body.name.trim(),
+    username: req.body.username.trim(),
+    email: req.body.email.trim(),
     wallet: null,
     balance: 0,
     password: bcrypt.hashSync(req.body.password, 8)
@@ -79,7 +79,7 @@ exports.sendCodeOnEmail = async (req, res) => {
 exports.signin = (req, res) => {
   User.findOne({
     where: {
-      [Op.or]: [{ username: req.body.username }, { email: req.body.username }]
+      [Op.or]: [{ username: req.body.username.trim() }, { email: req.body.username.trim() }]
     }
   })
     .then(async (user) => {
