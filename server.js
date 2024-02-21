@@ -63,6 +63,7 @@ const matches = db.matches;
 const Tournaments = db.tournaments;
 const activeTournaments = db.activeTournaments;
 const historyTournaments = db.historyTournaments;
+const purchases = db.purchases;
 
 // db.sequelize.sync();
 // force: true will drop the table if it already exists
@@ -269,23 +270,20 @@ async function TournamentsInit() {
       tour.players.split(",")?.forEach((user) => {
         result[user] = 0;
       });
-      matches
+      levels
         .findAll({
           where: {
             tournament_key: tour.tournament_key,
           },
         })
-        .then(async (matches) => {
-          matches.forEach(async (match) => {
-            match.tournament_participants
-              .split(",")
-              ?.forEach((match_participants) => {
-                if (match_participants == match.winner_id) {
-                  result[match_participants] += match.match_cost;
-                } else {
-                  result[match_participants] -= match.match_cost;
-                }
-              });
+        .then(async (levels_arr) => {
+          await levels_arr.forEach(async level => {
+            if (level.isWin && level.tournament_participants != null) {
+              result[level.tournament_participants] += level.win_cost
+            }
+            else {
+              result[level.tournament_participants] -= level.lose_cost
+            }
           });
 
           const getGamesCount = async (user_id) => {
@@ -297,76 +295,91 @@ async function TournamentsInit() {
             return count
           }
 
-          let test = [['9', -11, 14], ['1', 10, 70], ['2', 30, 20], ['3', 30, 30], ['4', 30, 50]]
           var tuples = [];
           for (var key in result) tuples.push([key, result[key], await getGamesCount(key)]);
-          tuples.sort(function (a, b) {
-
-            if (a[1] > b[1]) {
-              return -1
-            }
-            else if (a[1] < b[1]) {
-              return 1
-            }
-            else {
-              if (a[2] > b[2]) {
+          var purchases_arr
+          tuples.forEach(async (user) => {
+            purchases_arr = await purchases.findAll({
+              where: {
+                user_id: user[0],
+                game: tour.game,
+                tournament_key: tour.tournament_key
+              }
+            }).then((purchases_arr) => {
+              purchases_arr.forEach(async (purchase) => {
+                return user[1] -= Number(purchase.cost);
+              });
+            })
+          })
+          const sort = (tuples) => {
+            return tuples.sort(function (a, b) {
+              if (a[1] > b[1]) {
                 return -1
               }
-              else {
-                return 0
+              else if (a[1] < b[1]) {
+                return 1
               }
-              // return 0
-
-            }
-          });
-          const findUserName = async (id) => {
-            try {
-              const founded_user = await users.findOne({
-                where: {
-                  id: id,
-                },
-              });
-              return founded_user.wallet;
-            } catch (err) {
-              console.log(err);
-            }
-          };
-          for (var i = 0; i < tuples.length; i++) {
-            var key = tuples[i][0];
-            var value = tuples[i][1];
-            var prize = 0;
-            switch (i) {
-              case 0:
-                prize = 40;
-                break;
-              case 1:
-                prize = 30;
-                break;
-              case 2:
-                prize = 10;
-                break;
-
-              default:
-                break;
-            }
-            resp.push({
-              wallet: await findUserName(key),
-              prize: prize,
-            });
+              else {
+                if (a[2] > b[2]) {
+                  return -1
+                }
+                else {
+                  return 0
+                }
+              }
+            })
           }
-          // tuples.map(async item => {
-          //   await users.findOne({
-          //     where: {
-          //       id: item[0],
-          //     }
-          //   }).then(_usert => resp += {
-          //     _usert: item[1]
-          //   })
-          // })
-          // возможно нужно будет
+          setTimeout(async () => {
+            sort(tuples)
+            const findUserName = async (id) => {
+              try {
+                const founded_user = await users.findOne({
+                  where: {
+                    id: id,
+                  },
+                });
+                return founded_user.wallet;
+              } catch (err) {
+                console.log(err);
+              }
+            };
+            for (var i = 0; i < tuples.length; i++) {
+              var key = tuples[i][0];
+              var value = tuples[i][1];
+              var prize = 0;
+              switch (i) {
+                case 0:
+                  prize = 40;
+                  break;
+                case 1:
+                  prize = 30;
+                  break;
+                case 2:
+                  prize = 10;
+                  break;
 
-          console.log(resp);
-          resolve(resp);
+                default:
+                  break;
+              }
+              resp.push({
+                wallet: await findUserName(key),
+                prize: prize,
+              });
+            }
+            // tuples.map(async item => {
+            //   await users.findOne({
+            //     where: {
+            //       id: item[0],
+            //     }
+            //   }).then(_usert => resp += {
+            //     _usert: item[1]
+            //   })
+            // })
+            // возможно нужно будет
+
+            console.log(resp);
+            resolve(resp);
+          }, 2000);
         })
         .catch((err) => {
           console.log(err);
@@ -387,7 +400,7 @@ async function TournamentsInit() {
       // Запуск турнира
       cron.schedule(
         `21  17 * * ${tournament.dayOfWeekFrom}`,
-        
+
         function () {
           console.log(`"${tournament.name}" tournaments created!`);
           historyTournaments
@@ -431,51 +444,49 @@ async function TournamentsInit() {
 
       // Завершение активного турнира ${tournament.dayOfWeekTo}
       cron.schedule(
-        `20 16 * * ${tournament.dayOfWeekTo}`,
-        function () {
+        `14 12 * * ${tournament.dayOfWeekTo}`,
+        async function () {
           console.log('Завершение активного турнира');
-          activeTournaments
+          await activeTournaments
             .findOne({
               where: {
                 name: tournament.dataValues.name,
               },
             })
             .then(async (tour) => {
-              historyTournaments
-                .create({
-                  image: tour.dataValues.image,
-                  disabled: tour.dataValues.disabled,
-                  name: tour.dataValues.name,
-                  description: tour.dataValues.description,
-                  id: tour.dataValues.id,
-                  daysLeft: tour.dataValues.daysLeft,
-                  players: tour.dataValues.players,
-                  cost: tour.dataValues.cost,
-                  game: tour.dataValues.game,
-                  address: tour.dataValues.address,
-                  chainID: tour.dataValues.chainID,
-                  dayOfWeekFrom: tour.dataValues.dayOfWeekFrom,
-                  dayOfWeekTo: tour.dataValues.dayOfWeekTo,
-                  goal: tour.dataValues.goal,
-                  participants: tour.dataValues.participants,
-                  bank: tour.dataValues.bank,
-                  tournament_key: tour.dataValues.tournament_key,
-                })
+              historyTournaments.create({
+                image: tour.dataValues.image,
+                disabled: tour.dataValues.disabled,
+                name: tour.dataValues.name,
+                description: tour.dataValues.description,
+                id: tour.dataValues.id,
+                daysLeft: tour.dataValues.daysLeft,
+                players: tour.dataValues.players,
+                cost: tour.dataValues.cost,
+                game: tour.dataValues.game,
+                address: tour.dataValues.address,
+                chainID: tour.dataValues.chainID,
+                dayOfWeekFrom: tour.dataValues.dayOfWeekFrom,
+                dayOfWeekTo: tour.dataValues.dayOfWeekTo,
+                goal: tour.dataValues.goal,
+                participants: tour.dataValues.participants,
+                bank: tour.dataValues.bank,
+                tournament_key: tour.dataValues.tournament_key,
+              })
                 .then(async () => {
-                  activeTournaments.destroy({
-                    where: {
-                      id: tour.dataValues.id,
-                    },
-                  });
-                  console.log(
-                    `"${tournament.name} ${tournament.id}" tournaments deleted from active tournaments!`
-                  );
+                  // activeTournaments.destroy({
+                  //   where: {
+                  //     id: tour.dataValues.id,
+                  //   },
+                  // });
+                  // console.log(
+                  //   `"${tournament.name} ${tournament.id}" tournaments deleted from active tournaments!`
+                  // );
 
                   getWinners(tour).then(async (value) => {
                     console.log(value.length);
                     console.log(
-                      `Tournament ${tour.dataValues.name
-                      } winners: ${ethers.utils.parseEther(value[0].prize.toString())}`
+                      `Tournament ${tour.dataValues.name} winners: ${ethers.utils.parseEther(value[0].prize.toString())}`
                     );
 
                     for (let i = 0; i < value.length; i++) {
@@ -490,7 +501,9 @@ async function TournamentsInit() {
                       );
                     }
                   });
-                });
+                }).catch(err =>{
+                  console.log(err);
+                })
             });
           console.log(`"${tournament.name}" tournaments ended!`);
         },
