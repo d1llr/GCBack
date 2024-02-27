@@ -12,11 +12,12 @@ module.exports = function (app) {
 
     app.post("/api/GS/match/startMatch", [authAPI.verifyApiKey], controller.startMatch);
     app.post("/api/GS/match/startSingleMatch", [authJwt.verifyToken], controller.startSingleMatch);
-
+    app.post("/api/GS/match/startSingleTournamentMatch", [authJwt.verifyToken], controller.startSingleTournamentMatch);
 
 
     app.post("/api/GS/match/finishMatch", [authAPI.verifyApiKey], controller.finishMatch);
     app.post("/api/GS/match/finishSingleMatch", [authJwt.verifyToken], controller.finishSingleMatch);
+    app.post("/api/GS/match/finishSingleTournamentsMatch", [authJwt.verifyToken], controller.finishSingleTournamentsMatch);
 
 
 
@@ -25,6 +26,6 @@ module.exports = function (app) {
 
     app.get("/api/user/singleMatch/getLastLevel/:game_name/:id", [authJwt.verifyToken], controller.getLastLevel_v2);
 
-
+    app.get("/api/user/singleMatch/getLastLevel/:tournament_key/:game_name/:id", [authJwt.verifyToken], controller.getLastLevelTournament);
 
 };

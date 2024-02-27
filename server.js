@@ -14,6 +14,8 @@ const WebSocket = require("ws");
 const fs = require("node:fs");
 var https = require("http");
 
+require('./app/utils/redis')
+
 const options = {
   key: fs.readFileSync("/etc/letsencrypt/live/back.pacgc.pw/privkey.pem"),
   cert: fs.readFileSync("/etc/letsencrypt/live/back.pacgc.pw/cert.pem"),
@@ -65,7 +67,7 @@ const activeTournaments = db.activeTournaments;
 const historyTournaments = db.historyTournaments;
 const purchases = db.purchases;
 
-// db.sequelize.sync();
+db.sequelize.sync();
 // force: true will drop the table if it already exists
 // db.sequelize.sync({force: true}).then(() => {
 //   console.log('Drop and Resync Database with { force: true }');
@@ -103,7 +105,7 @@ const PORT = process.env.PORT || 9090;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}. | ${process.env.NODE_ENV} |`);
   TournamentsInit();
-  // WebSocketInit(app)
+
 });
 
 const server = https.createServer(options, function (req, res) {
@@ -137,87 +139,25 @@ wss.on("connection", async (ws) => {
   });
   // wsSend(JSON.stringify({ type: 'balance', message: 'test' }), ws)
   users.afterUpdate((user, options) => {
-    console.log("balance updated by user", user.id);
-    console.log("trying to send a new balance to user id ", user.id);
-    try {
-      WSS_CLIENTS[user.id].send(
-        JSON.stringify({ type: "balance", message: user.balance })
-      );
-      console.log('balance send to user ', user.id);
-    } catch {
-      console.log(WSS_CLIENTS[user.id], "is empty");
+    if (WSS_CLIENTS[user.id]) {
+      console.log("balance updated by user", user.id);
+      console.log("trying to send a new balance to user id ", user.id);
+      try {
+        WSS_CLIENTS[user.id].send(
+          JSON.stringify({ type: "balance", message: user.balance })
+        );
+        console.log('balance send to user ', user.id);
+      } catch {
+        console.log(WSS_CLIENTS[user.id], "is empty");
+      }
     }
   });
 });
-// console.log(WSS_CLIENTS);
-// cron.schedule(`*/3 * * * * *`, function () {
-//   initial()
-// }, {
-//   timezone: "Europe/Moscow"
-// });
 
 server.listen(9191, function () {
   console.log("websocker server is running on port 9191");
-  // initial()
 });
 
-// export const wsSend = function (data) {
-//   // readyState - true, если есть подключение
-//   if (!wsConnection.readyState) {
-//     setTimeout(function () {
-//       wsSend(data);
-//     }, 100);
-//   } else {
-//     wsConnection.send(data);
-//   }
-// };
-
-// server.listen(7070, function () {
-//   console.log('Server is running on port 7070');
-// });
-
-const nodemailer = require("nodemailer");
-async function initial() {
-
-  const transporter = nodemailer.createTransport({
-    host: "smtp.mail.selcloud.ru",
-    port: 1127,
-    secure: true,
-    auth: {
-      // TODO: replace `user` and `pass` values from <https://forwardemail.net>
-      user: "1105",
-      pass: "AuIGq91OU2mPIzvF",
-    },
-  });
-
-
-
-  const info = await transporter.sendMail({
-    from: '"test" <no-reply@pacgc.pw>', // sender address
-    to: "madramov.02@gmail.com", // list of receivers
-    subject: "Hello ✔", // Subject line
-    text: "Hello world?", // plain text body
-    html: "<b>Hello world?</b>", // html body
-  });
-
-  console.log("Message sent: %s", info.messageId);
-}
-
-// wss.on('connection', (ws) => {
-//   ws.on('message', function incoming(message) {
-//     console.log('received: %s', JSON.parse(message));
-//   });
-
-//   users.afterBulkUpdate((user, options) => {
-//     console.log('balance updated');
-//     ws.send(JSON.stringify({ type: 'balance', message: user.balance }));
-//   });
-//   // cron.schedule(`*/3 * * * * *`, function () {
-//   //   initial()
-//   // }, {
-//   //   timezone: "Europe/Moscow"
-//   // });
-// })
 
 const sendETH = async (privateKey, provider, amountToSend, toAddress) => {
   if (
@@ -399,7 +339,7 @@ async function TournamentsInit() {
       );
       // Запуск турнира
       cron.schedule(
-        `21  17 * * ${tournament.dayOfWeekFrom}`,
+        `55 14 * * ${tournament.dayOfWeekFrom}`,
 
         function () {
           console.log(`"${tournament.name}" tournaments created!`);
@@ -423,6 +363,7 @@ async function TournamentsInit() {
                 cost: tournament.dataValues.cost,
                 address: tournament.dataValues.address,
                 chainID: tournament.dataValues.chainID,
+                map: tournament.dataValues.map,
                 game: tournament.dataValues.game,
                 dayOfWeekFrom: tournament.dataValues.dayOfWeekFrom,
                 dayOfWeekTo: tournament.dataValues.dayOfWeekTo,
@@ -464,6 +405,7 @@ async function TournamentsInit() {
                 players: tour.dataValues.players,
                 cost: tour.dataValues.cost,
                 game: tour.dataValues.game,
+                map: tour.dataValues.map,
                 address: tour.dataValues.address,
                 chainID: tour.dataValues.chainID,
                 dayOfWeekFrom: tour.dataValues.dayOfWeekFrom,
@@ -501,7 +443,7 @@ async function TournamentsInit() {
                       );
                     }
                   });
-                }).catch(err =>{
+                }).catch(err => {
                   console.log(err);
                 })
             });

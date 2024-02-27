@@ -16,6 +16,41 @@ exports.getAll = (req, res) => {
   };
 };
 
+
+exports.getAllByGame = (req, res) => {
+  try {
+    activeTournaments.findAll({
+      attributes: ['name', 'players', 'tournament_key'],
+    }, {
+      where: {
+        game: req.body.game
+      }
+    }).then(tournaments => {
+      res.send({tournaments: tournaments});
+    });
+  }
+  catch {
+    res.status(500).send({ message: err.message });
+  };
+};
+
+
+
+exports.getTournamentMapById = (req, res) => {
+  try {
+    activeTournaments.findOne( {
+      where: {
+        tournament_key: req.params['tournament_key']
+      }
+    }).then(tournament => {
+      res.send({map:tournament.map});
+    });
+  }
+  catch {
+    res.status(500).send({ message: err.message });
+  };
+};
+
 exports.getHistory = (req, res) => {
   try {
     historyTournaments.findAll().then(tournament => {

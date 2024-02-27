@@ -10,11 +10,21 @@ module.exports = function (app) {
     next();
   });
 
+
+  // GC tournaments page
   app.get("/api/tournaments/all", [authJwt.verifyToken], controller.getAll);
+
+
+  
+  //game tournaments
+  app.get("/api/tournaments/:game/all", [authJwt.verifyToken], controller.getAllByGame);
+
 
   app.get("/api/tournaments/history", [authJwt.verifyToken], controller.getHistory);
 
   app.get("/api/tournaments/:tournamentId", [authJwt.verifyToken], controller.getById);
+
+  app.get("/api/tournaments/:tournament_key/map", [authJwt.verifyToken], controller.getTournamentMapById);
 
   app.get("/api/tournaments/history/:tournamentId", [authJwt.verifyToken], controller.getByIdFromHistory);
 

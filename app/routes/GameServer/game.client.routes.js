@@ -11,5 +11,6 @@ module.exports = function (app) {
   });
 
   app.get("/api/GS/game/checkVersion/:name", controller.checkVersion);
+  
 
 };

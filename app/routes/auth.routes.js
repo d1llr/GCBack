@@ -19,12 +19,17 @@ module.exports = function (app) {
     controller.signup
   );
   app.post(
-    "/api/auth/check/sendCodeOnEmail",
+    "/api/auth/sendCode",
     [
       verifySignUp.checkDuplicateUsernameOrEmail,
       verifySignUp.checkRolesExisted
     ],
-    controller.sendCodeOnEmail
+    controller.sendCode
+  );
+
+  app.post(
+    "/api/auth/checkCode",
+    controller.checkCode
   );
 
   app.post("/api/auth/signin", controller.signin);

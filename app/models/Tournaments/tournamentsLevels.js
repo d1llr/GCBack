@@ -1,5 +1,5 @@
 module.exports = (sequelize, Sequelize) => {
-    const levels = sequelize.define("levels", {
+    const tournamentsLevels = sequelize.define("tournaments_levels", {
         id: {
             type: Sequelize.INTEGER,
             primaryKey: true,
@@ -16,6 +16,12 @@ module.exports = (sequelize, Sequelize) => {
         player_ID: {
             type: Sequelize.STRING
         },
+        tournament_key: {
+            type: Sequelize.STRING
+        },
+        tournament_participants: {
+            type: Sequelize.STRING
+        },
         end: {
             type: Sequelize.BOOLEAN
         },
@@ -30,5 +36,5 @@ module.exports = (sequelize, Sequelize) => {
         }
     });
 
-    return levels;
+    return tournamentsLevels;
 };

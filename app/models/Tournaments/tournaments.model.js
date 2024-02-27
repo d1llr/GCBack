@@ -15,6 +15,9 @@ module.exports = (sequelize, Sequelize) => {
     cost: {
       type: Sequelize.INTEGER
     },
+    map: {
+      type: Sequelize.STRING
+    },
     game: {
       type: Sequelize.STRING
     },
@@ -34,10 +37,10 @@ module.exports = (sequelize, Sequelize) => {
     goal: {
       type: Sequelize.STRING
     },
-    address:{
+    address: {
       type: Sequelize.STRING
     },
-    chainID:{
+    chainID: {
       type: Sequelize.STRING
     },
     participants: {

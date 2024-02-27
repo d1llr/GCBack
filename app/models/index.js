@@ -45,6 +45,7 @@ db.gameVersion = require('../models/GameServer/gamesVersion.model.js')(sequelize
 db.api_key = require('../models/GameServer/api.key.model.js')(sequelize, Sequelize);
 db.matches = require('../models/GameServer/matches.model.js')(sequelize, Sequelize);
 db.levels = require('../models/GameServer/levels.model.js')(sequelize, Sequelize);
+db.tournamentsLevel = require('../models/Tournaments/tournamentsLevels.js')(sequelize, Sequelize);
 
 // --------------------------------------------------------------------- //
 
