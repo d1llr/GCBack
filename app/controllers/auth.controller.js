@@ -6,6 +6,8 @@ const Op = db.Sequelize.Op;
 
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const { sendEmail } = require("../utils/mail");
+const { setCode, getCode } = require("../utils/redis");
 
 exports.signup = (req, res) => {
   // Save User to Database
@@ -44,32 +46,46 @@ exports.signup = (req, res) => {
 
 };
 
-const nodemailer = require("nodemailer");
-exports.sendCodeOnEmail = async (req, res) => {
+
+exports.sendCode = async (req, res) => {
   try {
-    const transporter = nodemailer.createTransport({
-      host: "smtp.mail.selcloud.ru",
-      port: 1127,
-      secure: true,
-      auth: {
-        // TODO: replace `user` and `pass` values from <https://forwardemail.net>
-        user: "1105",
-        pass: "AuIGq91OU2mPIzvF",
-      },
-    });
-    console.log(req.body.email);
-  
-  
-    const info = await transporter.sendMail({
-      from: '"test" <no-reply@pacgc.pw>', // sender address
-      to: "madramov.02@gmail.com", // list of receivers
-      subject: "Hello ✔", // Subject line
-      text: "Hello world?", // plain text body
-      html: "<b>Hello world?</b>", // html body
-    });
-  
-    console.log("Message sent: %s", info.messageId);
-    res.status(200).send({ message: 'register could be done' });
+    const { email } = req.body
+    let code = Math.floor(Math.random() * 9999) + 1000
+    await setCode('madramov.02@gmail.com', code).then(async () => {
+      console.log('Succesfully saved code on redis');
+      await sendEmail(
+        'madramov.02@gmail.com',
+        'Confirm your account on PACGC.PW',
+        `Your code confirmation is ${code}`
+      ).then(() => {
+        console.log(`Sending code[${code}] is success`);
+        res.status(200).send({ message: 'Code send on your email' });
+      }).catch(err => {
+        console.log(err);
+        res.status(404).send({ message: 'Retry later' })
+      })
+    })
+
+  }
+  catch {
+    res.status(500).send({ message: 'register failed' });
+  }
+}
+
+exports.checkCode = async (req, res) => {
+  try {
+    const { userCode } = req.body
+    console.log(`got userCode ${userCode}`);
+    await getCode('madramov.02@gmail.com').then(async (data) => {
+      console.log(`redis code is ${data}`);
+      if (userCode == data)
+        res.status(200).send({ message: 'register could be done' });
+      else res.status(400).send({ message: 'Code is invalid!' })
+    }).catch(err => {
+      console.log(err);
+      res.status(404).send({ message: 'Retry later' })
+    })
+
   }
   catch {
     res.status(500).send({ message: 'register failed' });
@@ -121,6 +137,7 @@ exports.signin = (req, res) => {
           accessToken: token,
           refreshToken: refreshToken,
         });
+
       });
     })
     .catch(err => {

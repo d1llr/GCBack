@@ -12,6 +12,9 @@ module.exports = (sequelize, Sequelize) => {
     description: {
       type: Sequelize.STRING
     },
+    map: {
+      type: Sequelize.STRING
+    },
     id: {
       type: Sequelize.STRING,
       primaryKey: true

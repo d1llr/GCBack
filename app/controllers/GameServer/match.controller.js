@@ -1,5 +1,5 @@
 const db = require("../../models");
-const { matches: matches, user: users, levels: levels, activeTournaments: activeTournaments } = db;
+const { matches: matches, user: users, levels: levels, activeTournaments: activeTournaments, tournamentsLevel: tournamentsLevel } = db;
 const Op = db.Sequelize.Op;
 
 
@@ -56,29 +56,6 @@ exports.startMatch = async (req, res) => {
 exports.startSingleMatch = async (req, res) => {
     console.log(`Trying to start level ${req.body.level_name} in the ${req.body.game_name} by user ${req.body.player_id}`);
     try {
-        var tournament_participants = ''
-        var tournament_key = ''
-        // провека участников на участие в турнире
-        await activeTournaments.findAll({
-            where: {
-                game: req.body.game_name
-            }
-        }).then(async tours => {
-            await tours.map(tr => {
-                let tournament_players = tr.players.split(',')
-                let match_player = req.body.player_id
-                if (tournament_players.includes(match_player)) {
-                    console.log('this is tournaments player!');
-                    tournament_participants = match_player
-                    tournament_key = tr.tournament_key
-                }
-            })
-        })
-            .catch(err => {
-                console.log(err);
-            })
-
-
         // проверка на незаконченные уровни у пользователя, в случае если он ливнул, баланс все равно спишется после
         await levels.findAll({
             where: {
@@ -106,36 +83,116 @@ exports.startSingleMatch = async (req, res) => {
             }).catch(err => {
                 console.log(err);
             })
-        console.log('Поиск лвла в базе/создание лвла');
-        const [user, created] = await levels.findOrCreate({
-            where: { level: req.body.level_name, player_ID: req.body.player_id, isWin: true, game: req.body.game_name },
-            defaults: {
+        console.log(`Starting level ${req.body.level_key}`);
+        await levels.findOne({
+            where: {
                 level: req.body.level_name,
-                win_cost: req.body.win_cost,
-                lose_cost: req.body.lose_cost,
                 player_ID: req.body.player_id,
-                tournament_key: tournament_key,
-                tournament_participants: tournament_participants,
-                game: req.body.game_name,
-                level_key: req.body.level_key,
-                isWin: null
+                isWin: true,
+                game: req.body.game_name
             }
-        }).catch(err => {
-            console.log(err);
+        }).then((founded) => {
+            if (!founded) {
+                levels.create({
+                    level: req.body.level_name,
+                    win_cost: req.body.win_cost,
+                    lose_cost: req.body.lose_cost,
+                    player_ID: req.body.player_id,
+                    game: req.body.game_name,
+                    level_key: req.body.level_key,
+                    isWin: 0
+                }).then(() => {
+                    res.status(200).send({ message: 'Level has been created!' });
+                    return null
+                }).catch(err => {
+                    res.status(404).send({ message: 'Something went wrong!' });
+                })
+                return null
+            }
+            else {
+                res.status(500).send({ message: 'Level already exist!' });
+            }
         })
 
         // Проверка на создание, если такой лвл есть, то вернется error, если лвла нет, то он создасться. 1 вариант практически невозможен, так как при начале каждого уровня идет проверка getLastLevel, своеобразный middleware
-        if (created) {
-            res.status(200).send({ message: 'Level has been created!' });
-        }
-        else {
-            res.status(500).send({ message: 'Level already exist!' });
-        }
     }
     catch {
         res.status(200).send({ message: 'Level has been created!' });
     };
 };
+
+exports.startSingleTournamentMatch = async (req, res) => {
+    console.log(`Trying to start tournament level ${req.body.level_name} in the ${req.body.game_name} by user ${req.body.player_id}`);
+    try {
+       
+        // проверка на незаконченные уровни у пользователя, в случае если он ливнул, баланс все равно спишется после
+        await tournamentsLevel.findAll({
+            where: {
+                level: req.body.level_name,
+                player_ID: req.body.player_id,
+                end: false,
+                tournament_key: req.body.tournament_key
+            }
+        })
+            .then(levels => {
+                levels.forEach(level => {
+                    level.update({
+                        end: true,
+                        isWin: false
+                    })
+                    users.findOne({
+                        where: {
+                            id: level.player_ID
+                        }
+                    }).then(user => {
+                        user.update({
+                            balance: user.balance - level.lose_cost
+                        })
+                    })
+                });
+            }).catch(err => {
+                console.log(err);
+            })
+        console.log(`Starting tournament level ${req.body.level_key}`);
+        await tournamentsLevel.findOne({
+            where: {
+                level: req.body.level_name,
+                player_ID: req.body.player_id,
+                isWin: true,
+                game: req.body.game_name,
+                tournament_key: req.body.tournament_key
+            }
+        }).then((founded) => {
+            if (!founded) {
+                tournamentsLevel.create({
+                    level: req.body.level_name,
+                    win_cost: req.body.win_cost,
+                    lose_cost: req.body.lose_cost,
+                    player_ID: req.body.player_id,
+                    tournament_key: req.body.tournament_key,
+                    game: req.body.game_name,
+                    level_key: req.body.level_key,
+                    isWin: 0
+                }).then(() => {
+                    res.status(200).send({ message: 'Level has been created!' });
+                    return null
+                }).catch(err => {
+                    res.status(404).send({ message: 'Something went wrong!' });
+                })
+                return null
+            }
+            else {
+                res.status(500).send({ message: 'Level already exist!' });
+            }
+        })
+
+        // Проверка на создание, если такой лвл есть, то вернется error, если лвла нет, то он создасться. 1 вариант практически невозможен, так как при начале каждого уровня идет проверка getLastLevel, своеобразный middleware
+    }
+    catch {
+        res.status(200).send({ message: 'Level has been created!' });
+    };
+};
+
 
 exports.getLastLevel = (req, res) => {
     try {
@@ -188,6 +245,33 @@ exports.getLastLevel_v2 = (req, res) => {
     };
 };
 
+exports.getLastLevelTournament = (req, res) => {
+    try {
+        console.log(`Getting last level of the ${req.params['game_name']}`);
+        console.log( req.params);
+        if (req.params['id'] && req.params['game_name'] && req.params['tournament_key'])
+            tournamentsLevel.max('level', {
+                where: {
+                    player_ID: req.params['id'],
+                    isWin: true,
+                    game: req.params['game_name'],
+                    tournament_key: req.params['tournament_key'],
+                    end: true
+                }
+            })
+                .then(level => {
+                    res.status(200).json(level);
+                })
+                .catch(err => {
+                    res.status(200).json(0);
+                })
+        else res.status(500).send({ message: 'Level error!' });
+    }
+    catch {
+        res.status(500).send({ message: 'Level error!' });
+    };
+};
+
 exports.finishSingleMatch = (req, res) => {
     console.log(`Ending level ${req.body.level_key}`);
     try {
@@ -201,40 +285,45 @@ exports.finishSingleMatch = (req, res) => {
                 isWin: req.body.isWin == 'False' ? false : true
             }).then(() => {
                 users.findOne(
-                    {where: {id: level.player_ID}}
+                    { where: { id: level.player_ID } }
                 ).then(winner => {
                     if (req.body.isWin == 'False' ? false : true) {
+                        console.log('win true');
                         winner.update({
                             balance: winner.balance + level.win_cost
                         }).then(() => {
                             res.status(200).send({ message: 'level has been ended succesfully!' });
-                        }).catch((err) => {
-                            console.log(err);
+                            return null
 
+                        }).catch((err) => {
                             res.status(502).send({ message: 'winners did not receive their winnings!' });
                         })
                     }
                     else {
+                        console.log('win false');
+
                         winner.update({
                             balance: winner.balance - level.lose_cost
                         }).then(() => {
                             res.status(200).send({ message: 'level has been ended succesfully!' });
+                            return null
+
                         }).catch((err) => {
-                            console.log(err);
                             res.status(503).send({ message: 'Looser balance not decremented!' });
                         })
+
                     }
+                    return null
                 })
                     .catch((err) => {
-                        console.log(err);
                         res.status(501).send({ message: 'winners not found!' });
                     })
+                return null
             }).catch((err) => {
-                console.log(err);
                 res.status(505).send({ message: 'level could not be ended!' });
             })
+            return null
         }).catch((err) => {
-            console.log(err);
             res.status(506).send({ message: 'level could not be found!' });
         })
     }
@@ -242,6 +331,69 @@ exports.finishSingleMatch = (req, res) => {
         res.status(507).send({ message: 'finishMatch error!' });
     };
 };
+
+
+exports.finishSingleTournamentsMatch = (req, res) => {
+    console.log(`Ending level tournament ${req.body.level_key}`);
+    try {
+        tournamentsLevel.findOne({
+            where: {
+                level_key: req.body.level_key,
+                tournament_key: req.body.tournament_key,
+            }
+        }).then(level => {
+            level.update({
+                end: true,
+                isWin: req.body.isWin == 'False' ? false : true
+            }).then(() => {
+                users.findOne(
+                    { where: { id: level.player_ID } }
+                ).then(winner => {
+                    if (req.body.isWin == 'False' ? false : true) {
+                        console.log('win true');
+                        winner.update({
+                            balance: winner.balance + level.win_cost
+                        }).then(() => {
+                            res.status(200).send({ message: 'level has been ended succesfully!' });
+                            return null
+
+                        }).catch((err) => {
+                            res.status(502).send({ message: 'winners did not receive their winnings!' });
+                        })
+                    }
+                    else {
+                        console.log('win false');
+
+                        winner.update({
+                            balance: winner.balance - level.lose_cost
+                        }).then(() => {
+                            res.status(200).send({ message: 'level has been ended succesfully!' });
+                            return null
+
+                        }).catch((err) => {
+                            res.status(503).send({ message: 'Looser balance not decremented!' });
+                        })
+
+                    }
+                    return null
+                })
+                    .catch((err) => {
+                        res.status(501).send({ message: 'winners not found!' });
+                    })
+                return null
+            }).catch((err) => {
+                res.status(505).send({ message: 'level could not be ended!' });
+            })
+            return null
+        }).catch((err) => {
+            res.status(506).send({ message: 'level could not be found!' });
+        })
+    }
+    catch {
+        res.status(507).send({ message: 'finishMatch error!' });
+    };
+};
+
 
 exports.finishMatch = (req, res) => {
     console.log(`Ending pvp round ${req.body.match_key}`);
