@@ -52,7 +52,7 @@ exports.Purchases = async (req, res) => {
       game: req.body.game,
       cost: req.body.cost,
       product: req.body.product,
-      tournament_key: await getTournamentPlayers()
+      tournament_key: req.body.tournament_key
     })
       .then(() => {
         user.findOne({
