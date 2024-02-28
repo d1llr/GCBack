@@ -19,9 +19,6 @@ module.exports = (sequelize, Sequelize) => {
         tournament_key: {
             type: Sequelize.STRING
         },
-        tournament_participants: {
-            type: Sequelize.STRING
-        },
         end: {
             type: Sequelize.BOOLEAN
         },
