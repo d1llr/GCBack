@@ -210,7 +210,7 @@ async function TournamentsInit() {
       tour.players.split(",")?.forEach((user) => {
         result[user] = 0;
       });
-      levels
+      db.tournamentsLevel
         .findAll({
           where: {
             tournament_key: tour.tournament_key,
@@ -218,18 +218,18 @@ async function TournamentsInit() {
         })
         .then(async (levels_arr) => {
           await levels_arr.forEach(async level => {
-            if (level.isWin && level.tournament_participants != null) {
-              result[level.tournament_participants] += level.win_cost
+            if (level.isWin && level.player_ID != null) {
+              result[level.player_ID] += level.win_cost
             }
             else {
-              result[level.tournament_participants] -= level.lose_cost
+              result[level.player_ID] -= level.lose_cost
             }
           });
 
           const getGamesCount = async (user_id) => {
             const { count, rows } = await levels.findAndCountAll({
               where: {
-                tournament_participants: user_id
+                player_ID: user_id
               }
             })
             return count
