@@ -1,6 +1,7 @@
 const db = require("../models");
 const { user: user } = db;
 const { matches: matches, purchases: purchases, activeTournaments: activeTournaments } = db;
+const bcrypt = require("bcryptjs");
 
 
 
@@ -34,13 +35,37 @@ exports.getUserName = (req, res) => {
 };
 
 
+exports.changePassword = (req, res) => {
+  console.log(req.body);
+  try {
+    user.findOne({
+      where: {
+        email: req.body.email
+      }
+    }).then(founded => {
+      founded.update({
+        password: bcrypt.hashSync(req.body.password, 8)
+      })
+      res.status(200).send({ message: 'Password updated successfully!' });
+      return null
+    }).catch(err => {
+      res.status(404).send({ message: 'Email не существует' });
+
+    })
+  }
+  catch {
+    res.status(500).send({ message: 'Username не существует' });
+  };
+};
+
+
 exports.Purchases = async (req, res) => {
   try {
     const getTournamentPlayers = async () => {
       var tournament_key = []
       await activeTournaments.findAll().then(tournaments => {
         tournaments.forEach(tournament => {
-          
+
           tournament.players.split(',')?.includes(req.body.user_id) && tournament_key.push(tournament.tournament_key)
         });
       })

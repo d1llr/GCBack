@@ -124,7 +124,7 @@ exports.startSingleMatch = async (req, res) => {
 exports.startSingleTournamentMatch = async (req, res) => {
     console.log(`Trying to start tournament level ${req.body.level_name} in the ${req.body.game_name} by user ${req.body.player_id}`);
     try {
-       
+        console.log(req.body);
         // проверка на незаконченные уровни у пользователя, в случае если он ливнул, баланс все равно спишется после
         await tournamentsLevel.findAll({
             where: {

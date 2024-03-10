@@ -19,6 +19,8 @@ module.exports = function (app) {
   //game tournaments
   app.get("/api/tournaments/:game/all", [authJwt.verifyToken], controller.getAllByGame);
 
+  app.get("/api/tournaments/activeAndHistory/all/:game", [authJwt.verifyToken], controller.getAllActiveAndHistoryTournaments);
+
 
   app.get("/api/tournaments/history", [authJwt.verifyToken], controller.getHistory);
 

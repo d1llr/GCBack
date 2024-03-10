@@ -5,7 +5,9 @@ const fs = require('fs');
 
 exports.getAll = (req, res) => {
   try {
-    games.findAll().then(games => {
+    games.findAll({
+      attributes: ['id', 'name', 'short_desc', 'active']
+    }).then(games => {
       res.send(games);
     });
   }
@@ -17,17 +19,12 @@ exports.getAll = (req, res) => {
 exports.getById = (req, res) => {
   try {
     games.findOne({
+      attributes: ['id', 'name', 'short_desc', 'links', 'code'],
       where: {
         id: req.params["gameId"]
       }
     }).then(game => {
-      fs.readdir(game.scr_dir, (err, files) => {
-        if (err) console.log(err);
-        res.status(200).send({
-          game: game,
-          screenshots: files
-        });
-      });
+      res.status(200).send(game);
     })
   }
   catch {

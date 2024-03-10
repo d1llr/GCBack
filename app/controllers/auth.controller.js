@@ -50,7 +50,7 @@ exports.signup = (req, res) => {
 exports.sendCode = async (req, res) => {
   try {
     const { email } = req.body
-    let code = Math.floor(Math.random() * 9999) + 1000
+    let code = Math.floor(Math.random() * 8888) + 1000
     await setCode('madramov.02@gmail.com', code).then(async () => {
       console.log('Succesfully saved code on redis');
       await sendEmail(
@@ -74,7 +74,7 @@ exports.sendCode = async (req, res) => {
 
 exports.checkCode = async (req, res) => {
   try {
-    const { userCode } = req.body
+    const { userCode, email } = req.body
     console.log(`got userCode ${userCode}`);
     await getCode('madramov.02@gmail.com').then(async (data) => {
       console.log(`redis code is ${data}`);
