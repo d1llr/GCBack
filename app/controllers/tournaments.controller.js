@@ -21,7 +21,6 @@ exports.getAllByGame = (req, res) => {
   try {
     activeTournaments.findAll({
       attributes: ['name', 'players', 'tournament_key'],
-    }, {
       where: {
         game: req.body.game
       }
@@ -35,6 +34,39 @@ exports.getAllByGame = (req, res) => {
 };
 
 
+
+exports.getAllActiveAndHistoryTournaments = async (req, res) => {
+  const response = {
+    active: {},
+    history: {}
+  }
+  try {
+    await activeTournaments.findAll({
+      attributes: ['name', 'goal', 'daysLeft', 'cost', 'id'],
+      where: {
+        game: req.params['game']
+      }
+    }).then(tournaments => {
+      response.active = tournaments
+    });
+    // --------------------------- //
+    await historyTournaments.findAll({
+      attributes: ['name', 'id', 'createdAt'],
+      where: {
+        game: req.params['game']
+      }
+    }).then(tournaments => {
+      response.history = tournaments
+    });
+    if (response.active.length == 0 && response.history.length == 0)
+      res.status(404).send({ message: 'Tournaments not found!' });
+    else
+      res.status(200).send(response)
+  }
+  catch {
+    res.status(404).send({ message: 'Error' });
+  };
+};
 
 exports.getTournamentMapById = (req, res) => {
   try {

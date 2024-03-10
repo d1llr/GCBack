@@ -35,7 +35,10 @@ const corsOptions = {
     // Проверка, что запрос пришел от разрешенного IP-адреса
     const allowedIps = [
       "https://dev.pacgc.pw",
-      "https://www.pacshooter.pw",
+      'http://localhost:4173',
+      "https://pacmatch.org",
+      "https://pacmatch.org",
+      'https://pacmanwars.pw'
     ]; // замените на разрешенные IP-адреса
     if (!origin || allowedIps.includes(origin)) {
       callback(null, true);
@@ -385,7 +388,7 @@ async function TournamentsInit() {
 
       // Завершение активного турнира ${tournament.dayOfWeekTo}
       cron.schedule(
-        `14 12 * * ${tournament.dayOfWeekTo}`,
+        `07 11 * * ${tournament.dayOfWeekTo}`,
         async function () {
           console.log('Завершение активного турнира');
           await activeTournaments
@@ -414,6 +417,7 @@ async function TournamentsInit() {
                 participants: tour.dataValues.participants,
                 bank: tour.dataValues.bank,
                 tournament_key: tour.dataValues.tournament_key,
+                createdAt: new Date()
               })
                 .then(async () => {
                   // activeTournaments.destroy({

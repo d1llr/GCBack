@@ -10,20 +10,18 @@ module.exports = function (app) {
     next();
   });
 
+
+  // получение инфы о юзере
   app.get("/api/user/getInfoById/:id", [authJwt.verifyToken], controller.getInfoById);
-
   app.get("/api/user/getUserName/:id", [authJwt.verifyToken], controller.getUserName);
-
-
-  app.post("/api/user/inGamePurchases", [authJwt.verifyToken], controller.Purchases);
-
-
   app.get("/api/user/getIdByToken/:wallet", [authAPI.verifyApiKey], controller.getIdByToken);
-
   app.post("/api/user/getUserHistory", [authJwt.verifyToken], controller.getUserHistory);
 
-  app.post("/api/user/setWallet", [authJwt.verifyToken], controller.setWallet);
 
+  app.post("/api/user/changePassword", [], controller.changePassword);
+
+  app.post("/api/user/inGamePurchases", [authJwt.verifyToken], controller.Purchases);
+  app.post("/api/user/setWallet", [authJwt.verifyToken], controller.setWallet);
   app.post("/api/user/removeWallet", [authJwt.verifyToken], controller.removeWallet);
 
 
