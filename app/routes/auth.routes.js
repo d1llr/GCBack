@@ -13,7 +13,8 @@ module.exports = function (app) {
   app.post(
     "/api/auth/signup",
     [
-      verifySignUp.checkDuplicateUsernameOrEmail,
+      verifySignUp.checkDuplicateUsername,
+      verifySignUp.checkDuplicateEmail,
       verifySignUp.checkRolesExisted
     ],
     controller.signup
@@ -21,8 +22,16 @@ module.exports = function (app) {
   app.post(
     "/api/auth/sendCodeUponRegister",
     [
-      verifySignUp.checkDuplicateUsernameOrEmail,
+      verifySignUp.checkDuplicateEmail,
+      verifySignUp.checkDuplicateUsername,
       verifySignUp.checkRolesExisted
+    ],
+    controller.sendCode
+  );
+  app.post(
+    "/api/auth/SendCodeWithEmailValidation",
+    [
+      verifySignUp.checkDuplicateEmail,
     ],
     controller.sendCode
   );

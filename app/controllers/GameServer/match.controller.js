@@ -248,7 +248,7 @@ exports.getLastLevel_v2 = (req, res) => {
 exports.getLastLevelTournament = (req, res) => {
     try {
         console.log(`Getting last level of the ${req.params['game_name']}`);
-        console.log( req.params);
+        console.log(req.params);
         if (req.params['id'] && req.params['game_name'] && req.params['tournament_key'])
             tournamentsLevel.max('level', {
                 where: {
@@ -277,7 +277,8 @@ exports.finishSingleMatch = (req, res) => {
     try {
         levels.findOne({
             where: {
-                level_key: req.body.level_key
+                level_key: req.body.level_key,
+                end: false
             }
         }).then(level => {
             level.update({

@@ -12,6 +12,9 @@ module.exports = (sequelize, Sequelize) => {
     code: {
       type: Sequelize.STRING
     },
+    essence: {
+      type: Sequelize.STRING
+    },
     description: {
       type: Sequelize.STRING
     },

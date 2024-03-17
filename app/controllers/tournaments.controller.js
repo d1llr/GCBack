@@ -18,11 +18,12 @@ exports.getAll = (req, res) => {
 
 
 exports.getAllByGame = (req, res) => {
+  console.log(req.body.game);
   try {
     activeTournaments.findAll({
       attributes: ['name', 'players', 'tournament_key'],
       where: {
-        game: req.body.game
+        game: req.params['game']
       }
     }).then(tournaments => {
       res.send({ tournaments: tournaments });
@@ -33,6 +34,42 @@ exports.getAllByGame = (req, res) => {
   };
 };
 
+exports.getFilters = async (req, res) => {
+  const arr = []
+  try {
+    await activeTournaments.findAll({
+      attributes: ['chainID', 'game_name']
+    }).then(tournaments => {
+      arr.push({ ...tournaments, type: 'active' })
+    })
+    await historyTournaments.findAll({
+      attributes: ['chainID', 'game_name']
+    }).then(tournaments => {
+      arr.push({ ...tournaments, type: 'ended' })
+    })
+
+
+    res.status(200).send(arr);
+
+  }
+  catch {
+    res.status(500).send({ message: 'Error' });
+  };
+};
+
+exports.GetTournamentsCount = async (req, res) => {
+  const arr = []
+  try {
+    const { count, rows } = await activeTournaments.findAndCountAll()
+    const { count:historyCount, historyRows } = await historyTournaments.findAndCountAll()
+    console.log("activeCount", count);
+    res.status(200).json(count + historyCount)
+
+  }
+  catch {
+    res.status(500).send({ message: 'Error' });
+  };
+};
 
 
 exports.getAllActiveAndHistoryTournaments = async (req, res) => {
@@ -42,7 +79,7 @@ exports.getAllActiveAndHistoryTournaments = async (req, res) => {
   }
   try {
     await activeTournaments.findAll({
-      attributes: ['name', 'goal', 'daysLeft', 'cost', 'id'],
+      attributes: ['name', 'goal', 'game_name', 'daysLeft', 'cost', 'id'],
       where: {
         game: req.params['game']
       }
@@ -51,7 +88,7 @@ exports.getAllActiveAndHistoryTournaments = async (req, res) => {
     });
     // --------------------------- //
     await historyTournaments.findAll({
-      attributes: ['name', 'id', 'createdAt'],
+      attributes: ['name', 'id', 'game_name', 'createdAt'],
       where: {
         game: req.params['game']
       }
@@ -306,6 +343,108 @@ exports.getRating = (req, res) => {
             })
             break;
           case '3inRow':
+            tournamentsLevel.findAll({
+              where: {
+                tournament_key: founded.tournament_key
+              }
+            }).then(async levels_founded => {
+              levels_founded.forEach(async level => {
+                if (level.isWin && level.player_ID != null) {
+                  result[level.player_ID] += level.win_cost
+                }
+                else {
+                  result[level.player_ID] -= level.lose_cost
+                }
+              });
+              const getGamesCount = async (user_id) => {
+                const { count, rows } = await tournamentsLevel.findAndCountAll({
+                  where: {
+                    tournament_key: founded.tournament_key,
+                    player_ID: user_id
+                  }
+                })
+                return count
+              }
+              var tuples = [];
+              for (var key in result) tuples.push([key, result[key], await getGamesCount(key)]);
+              let purchases_arr;
+              tuples.forEach(async (user) => {
+                purchases_arr = await purchases.findAll({
+                  where: {
+                    user_id: user[0],
+                    game: founded.game,
+                    tournament_key: founded.tournament_key
+                  }
+                }).then((purchases_arr) => {
+                  purchases_arr.forEach(async (purchase) => {
+                    return user[1] -= Number(purchase.cost);
+                  });
+                })
+              })
+
+              const sort = (tuples) => {
+                return tuples.sort(function (a, b) {
+                  if (a[1] > b[1]) {
+                    return -1
+                  }
+                  else if (a[1] < b[1]) {
+                    return 1
+                  }
+                  else {
+                    if (a[2] > b[2]) {
+                      return -1
+                    }
+                    else {
+                      return 0
+                    }
+                    // return 0
+
+                  }
+                })
+              }
+              setTimeout(async () => {
+                sort(tuples)
+
+                const findUserName = async (id) => {
+                  try {
+                    const founded_user = await users.findOne({
+                      where: {
+                        id: id
+                      }
+                    });
+                    return founded_user.username;
+                  } catch (err) {
+                    console.log(err);
+                  }
+                };
+                for (var i = 0; i < tuples.length; i++) {
+                  var key = tuples[i][0];
+                  var value = tuples[i][1];
+                  var games_count = tuples[i][2];
+                  resp.push({
+                    username: await findUserName(key),
+                    earned: value,
+                    games_count: games_count
+                  })
+                }
+                // tuples.map(async item => {
+                //   await users.findOne({
+                //     where: {
+                //       id: item[0],
+                //     }
+                //   }).then(_usert => resp += {
+                //     _usert: item[1]
+                //   })
+                // })
+                // возможно нужно будет
+
+                res.status(200).json(resp);
+              }, 2000);
+            }).catch((err) => {
+              res.status(404).send('Not found!');
+            })
+            break;
+          case 'PAC_WARS':
             tournamentsLevel.findAll({
               where: {
                 tournament_key: founded.tournament_key

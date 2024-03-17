@@ -35,10 +35,12 @@ const corsOptions = {
     // Проверка, что запрос пришел от разрешенного IP-адреса
     const allowedIps = [
       "https://dev.pacgc.pw",
+      "https://pacgc.pw",
       'http://localhost:4173',
       "https://pacmatch.org",
       "https://pacmatch.org",
-      'https://pacmanwars.pw'
+      'https://pacmanwars.pw',
+      'https://dev.pacmanwars.pw'
     ]; // замените на разрешенные IP-адреса
     if (!origin || allowedIps.includes(origin)) {
       callback(null, true);
@@ -104,7 +106,7 @@ require("./app/routes/GameServer/match.game.routes")(app);
 require("./app/routes/Time/time.routes")(app);
 
 // set port, listen for requests
-const PORT = process.env.PORT || 9090;
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}. | ${process.env.NODE_ENV} |`);
   TournamentsInit();
@@ -157,7 +159,7 @@ wss.on("connection", async (ws) => {
   });
 });
 
-server.listen(9191, function () {
+server.listen(7070, function () {
   console.log("websocker server is running on port 9191");
 });
 
@@ -342,7 +344,7 @@ async function TournamentsInit() {
       );
       // Запуск турнира
       cron.schedule(
-        `55 14 * * ${tournament.dayOfWeekFrom}`,
+        `36 13 * * ${tournament.dayOfWeekFrom}`,
 
         function () {
           console.log(`"${tournament.name}" tournaments created!`);
@@ -368,10 +370,12 @@ async function TournamentsInit() {
                 chainID: tournament.dataValues.chainID,
                 map: tournament.dataValues.map,
                 game: tournament.dataValues.game,
+                game_name: tournament.dataValues.game_name,
                 dayOfWeekFrom: tournament.dataValues.dayOfWeekFrom,
                 dayOfWeekTo: tournament.dataValues.dayOfWeekTo,
                 goal: tournament.dataValues.goal,
                 participants: 0,
+                awards: tournament.dataValues.awards,
                 bank: tournament.dataValues.bank,
                 tournament_key: crypto.randomBytes(10).toString("hex"),
               });
@@ -388,7 +392,7 @@ async function TournamentsInit() {
 
       // Завершение активного турнира ${tournament.dayOfWeekTo}
       cron.schedule(
-        `07 11 * * ${tournament.dayOfWeekTo}`,
+        `10 13 * * ${tournament.dayOfWeekTo}`,
         async function () {
           console.log('Завершение активного турнира');
           await activeTournaments
@@ -408,8 +412,10 @@ async function TournamentsInit() {
                 players: tour.dataValues.players,
                 cost: tour.dataValues.cost,
                 game: tour.dataValues.game,
+                game_name: tour.dataValues.game_name,
                 map: tour.dataValues.map,
                 address: tour.dataValues.address,
+                awards: tour.dataValues.awards,
                 chainID: tour.dataValues.chainID,
                 dayOfWeekFrom: tour.dataValues.dayOfWeekFrom,
                 dayOfWeekTo: tour.dataValues.dayOfWeekTo,
@@ -420,14 +426,14 @@ async function TournamentsInit() {
                 createdAt: new Date()
               })
                 .then(async () => {
-                  // activeTournaments.destroy({
-                  //   where: {
-                  //     id: tour.dataValues.id,
-                  //   },
-                  // });
-                  // console.log(
-                  //   `"${tournament.name} ${tournament.id}" tournaments deleted from active tournaments!`
-                  // );
+                  activeTournaments.destroy({
+                    where: {
+                      id: tour.dataValues.id,
+                    },
+                  });
+                  console.log(
+                    `"${tournament.name} ${tournament.id}" tournaments deleted from active tournaments!`
+                  );
 
                   getWinners(tour).then(async (value) => {
                     console.log(value.length);

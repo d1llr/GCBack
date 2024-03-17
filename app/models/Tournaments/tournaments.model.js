@@ -15,10 +15,16 @@ module.exports = (sequelize, Sequelize) => {
     cost: {
       type: Sequelize.INTEGER
     },
+    awards: {
+      type: Sequelize.STRING
+    },
     map: {
       type: Sequelize.STRING
     },
     game: {
+      type: Sequelize.STRING
+    },
+    game_name: {
       type: Sequelize.STRING
     },
     id: {
