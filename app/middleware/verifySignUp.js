@@ -2,36 +2,79 @@ const db = require("../models");
 const ROLES = db.ROLES;
 const User = db.user;
 
-checkDuplicateUsernameOrEmail = (req, res, next) => {
+checkDuplicateEmail = (req, res, next) => {
   // Username
-  User.findOne({
-    where: {
-      username: req.body.username
-    }
-  }).then(user => {
-    if (user) {
-      res.status(400).send({
-        message: "Username is already in use!"
+  try {
+
+    if (req.body.email) {
+      User.findOne({
+        where: {
+          email: req.body.email
+        }
+      }).then(user => {
+        if (user) {
+          res.status(401).send({
+            message: "Email is already in use!"
+          });
+          return;
+        }
+        next();
       });
-      return;
+
     }
 
-    // Email
-    User.findOne({
-      where: {
-        email: req.body.email
-      }
-    }).then(user => {
-      if (user) {
-        res.status(401).send({
-          message: "Email is already in use!"
-        });
-        return;
-      }
-
-      next();
+  }
+  catch {
+    res.status(503).send({
+      message: "Bad request!"
     });
-  });
+  }
+};
+
+checkDuplicateUsername = (req, res, next) => {
+  // Username
+  try {
+    if (req.body.username) {
+      User.findOne({
+        where: {
+          username: req.body.username
+        }
+      }).then(user => {
+        if (user) {
+          res.status(400).send({
+            message: "Username is already in use!"
+          });
+          return;
+        }
+        next()
+      });
+    }
+    else {
+      if (req.body.email) {
+        User.findOne({
+          where: {
+            email: req.body.email
+          }
+        }).then(user => {
+          if (user) {
+            res.status(401).send({
+              message: "Email is already in use!"
+            });
+            return;
+          }
+
+          next();
+        });
+
+      }
+    }
+
+  }
+  catch {
+    res.status(503).send({
+      message: "Bad request!"
+    });
+  }
 };
 
 checkRolesExisted = (req, res, next) => {
@@ -45,12 +88,13 @@ checkRolesExisted = (req, res, next) => {
       }
     }
   }
-  
+
   next();
 };
 
 const verifySignUp = {
-  checkDuplicateUsernameOrEmail: checkDuplicateUsernameOrEmail,
+  checkDuplicateUsername: checkDuplicateUsername,
+  checkDuplicateEmail: checkDuplicateEmail,
   checkRolesExisted: checkRolesExisted
 };
 

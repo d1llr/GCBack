@@ -1,6 +1,6 @@
 const db = require("../models");
 const { user: user } = db;
-const { matches: matches, purchases: purchases, activeTournaments: activeTournaments } = db;
+const { matches: matches, levels: levels, purchases: purchases, activeTournaments: activeTournaments, games: games } = db;
 const bcrypt = require("bcryptjs");
 
 
@@ -58,6 +58,97 @@ exports.changePassword = (req, res) => {
   };
 };
 
+exports.checkOldPassword = (req, res) => {
+  console.log(req.body);
+  try {
+    user.findOne({
+      where: {
+        email: req.body.email
+      }
+    }).then(founded => {
+      if (bcrypt.compareSync(req.body.OldPassword, founded.password))
+        res.status(200).send({ message: 'Old pass is true' });
+      else {
+        res.status(400).send({ message: 'Old pass is false' });
+      }
+      return null
+    }).catch(err => {
+      res.status(404).send({ message: 'Email не существует' });
+
+    })
+  }
+  catch {
+    res.status(500).send({ message: 'Username не существует' });
+  };
+};
+
+exports.changeEmail = (req, res) => {
+  console.log(req.body);
+  try {
+    user.findOne({
+      where: {
+        id: req.body.id
+      }
+    }).then(founded => {
+      founded.update({
+        email: req.body.email
+      })
+      res.status(200).send({ message: 'email updated successfully!' });
+      return null
+    }).catch(err => {
+      res.status(404).send({ message: 'user не существует' });
+
+    })
+  }
+  catch {
+    res.status(500).send({ message: 'user не существует' });
+  };
+};
+
+exports.changeUserData = (req, res) => {
+  console.log(req.body);
+  try {
+    user.findOne({
+      where: {
+        id: req.body.id
+      }
+    }).then(founded => {
+      founded.update({
+        name: req.body.name,
+        username: req.body.username
+      })
+      res.status(200).send({ message: 'UserData updated successfully!' });
+      return null
+    }).catch(err => {
+      res.status(404).send({ message: 'UserData не существует' });
+
+    })
+  }
+  catch {
+    res.status(500).send({ message: 'UserData не существует' });
+  };
+};
+
+
+exports.deleteAccount = (req, res) => {
+  console.log(req.body);
+  try {
+    user.destroy({
+      where: {
+        email: req.body.email
+      }
+    }).then(founded => {
+      res.status(200).send({ message: 'user deleted successfully!' });
+      return null
+    }).catch(err => {
+      res.status(404).send({ message: 'user не существует' });
+
+    })
+  }
+  catch {
+    res.status(500).send({ message: 'user не существует' });
+  };
+};
 
 exports.Purchases = async (req, res) => {
   try {
@@ -133,31 +224,123 @@ exports.getIdByToken = (req, res) => {
 
 exports.getUserHistory = (req, res) => {
   var arr = []
+  var essence;
+  const essenceArray = { 'matches': matches, 'levels': levels }
   try {
-    matches.findAll({
+    games.findAll({
+      attributes: ['code', 'essence'],
       where: {
-        game: req.body.game
-      }
-    }).then(founded => {
-      founded.map(match => {
-        if (match.player_IDs.split(',').includes(req.body.id.toString())) {
-          arr.push({
-            title: match.match_name,
-            isWinner: match.winner_id == req.body.id ? true : false,
-            match_cost: match.match_cost,
-            createdAt: match.createdAt
-          })
-        }
+        active: true
+      },
+    }).then(async (founded) => {
+      await founded.forEach(game => {
+        if (req.body.game == game.code)
+          essence = essenceArray[game.essence]
+
+      });
+      await essence.findAll({
+        where: {
+          game: req.body.game,
+        },
+        order: [['createdAt', "DESC"]],
+      }).then(founded => {
+        founded.map(match => {
+          if (match.player_IDs) {
+            if (match.player_IDs?.split(',')?.includes(req.body.id.toString())) {
+              arr.push({
+                title: match.match_name,
+                isWinner: match.winner_id == req.body.id ? true : false,
+                match_cost: match.match_cost,
+                createdAt: match.createdAt
+              })
+            }
+          }
+          else {
+            if (match.player_ID?.toString().split(',')?.includes(req.body.id.toString())) {
+              arr.push({
+                title: match.level,
+                isWinner: match.isWin ? true : false,
+                match_cost: match.isWin ? match.win_cost : match.lose_cost,
+                createdAt: match.createdAt
+              })
+            }
+          }
+        })
+        res.status(200).json(arr.slice(req.body.offset, req.body.offset + req.body.limit));
+      }).catch(err => {
+        console.log(err);
       })
-      res.status(200).json(arr);
-    }).catch(err => {
-      console.log(err);
     })
+    // switch (req.body.game) {
+    //   case :
+
+    //     break;
+
+    //   default:
+    //     break;
+    // }
   }
   catch {
     res.status(500).send({ message: 'gameId не существует' });
   };
 };
+
+exports.GetUserGamesCount = (req, res) => {
+  var essence;
+  var arr = []
+  const essenceArray = { 'matches': matches, 'levels': levels }
+  try {
+    games.findAll({
+      attributes: ['code', 'essence'],
+      where: {
+        active: true
+      },
+    }).then((founded) => {
+      founded.forEach(game => {
+        if (req.body.game == game.code)
+          essence = essenceArray[game.essence]
+
+      });
+      essence.findAll({
+        where: {
+          game: req.body.game,
+        },
+      }).then(founded => {
+        founded.map(match => {
+          if (match.player_IDs) {
+            if (match.player_IDs?.split(',')?.includes(req.body.id.toString())) {
+              arr.push({
+                title: match.match_name,
+                isWinner: match.winner_id == req.body.id ? true : false,
+                match_cost: match.match_cost,
+                createdAt: match.createdAt
+              })
+            }
+          }
+          else {
+            if (match.player_ID?.toString().split(',')?.includes(req.body.id.toString())) {
+              arr.push({
+                title: match.level,
+                isWinner: match.isWin ? true : false,
+                match_cost: match.isWin ? match.win_cost : match.lose_cost,
+                createdAt: match.createdAt
+              })
+            }
+          }
+        })
+        res.status(200).json(arr.length);
+      }).catch(err => {
+        res.status(503).json(err);
+      })
+    })
+
+  }
+  catch {
+    res.status(404).send({ message: 'Error!' });
+
+  }
+}
+
 exports.setWallet = (req, res) => {
   // Save User to Database
   console.log(req.body);

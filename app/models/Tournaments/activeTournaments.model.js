@@ -19,20 +19,25 @@ module.exports = (sequelize, Sequelize) => {
       type: Sequelize.STRING,
       primaryKey: true
     },
-    address:{
+    address: {
       type: Sequelize.STRING
     },
-    chainID:{
+    chainID: {
       type: Sequelize.STRING
     },
-    
     players: {
       type: Sequelize.STRING
     },
     cost: {
       type: Sequelize.INTEGER
     },
+    awards: {
+      type: Sequelize.STRING
+    },
     game: {
+      type: Sequelize.STRING
+    },
+    game_name: {
       type: Sequelize.STRING
     },
     daysLeft: {

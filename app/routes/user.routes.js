@@ -1,6 +1,5 @@
-const { authJwt, authAPI } = require("../middleware");
+const { authJwt, authAPI, verifySignUp } = require("../middleware");
 const controller = require("../controllers/user.controller");
-
 module.exports = function (app) {
   app.use(function (req, res, next) {
     res.header(
@@ -16,9 +15,15 @@ module.exports = function (app) {
   app.get("/api/user/getUserName/:id", [authJwt.verifyToken], controller.getUserName);
   app.get("/api/user/getIdByToken/:wallet", [authAPI.verifyApiKey], controller.getIdByToken);
   app.post("/api/user/getUserHistory", [authJwt.verifyToken], controller.getUserHistory);
+  app.post("/api/user/GetUserGamesCount", [authJwt.verifyToken], controller.GetUserGamesCount);
 
 
   app.post("/api/user/changePassword", [], controller.changePassword);
+  app.post("/api/user/checkOldPassword", [authJwt.verifyToken], controller.checkOldPassword);
+  app.post("/api/user/changeEmail", [verifySignUp.checkDuplicateEmail, authJwt.verifyToken], controller.changeEmail);
+  app.post("/api/user/changeUserData", [authJwt.verifyToken, verifySignUp.checkDuplicateUsername], controller.changeUserData);
+  app.post("/api/user/deleteAccount", [authJwt.verifyToken], controller.deleteAccount);
+
 
   app.post("/api/user/inGamePurchases", [authJwt.verifyToken], controller.Purchases);
   app.post("/api/user/setWallet", [authJwt.verifyToken], controller.setWallet);

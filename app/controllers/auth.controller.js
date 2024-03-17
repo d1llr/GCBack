@@ -51,10 +51,10 @@ exports.sendCode = async (req, res) => {
   try {
     const { email } = req.body
     let code = Math.floor(Math.random() * 8888) + 1000
-    await setCode('madramov.02@gmail.com', code).then(async () => {
+    await setCode(email, code).then(async () => {
       console.log('Succesfully saved code on redis');
       await sendEmail(
-        'madramov.02@gmail.com',
+        email,
         'Confirm your account on PACGC.PW',
         `Your code confirmation is ${code}`
       ).then(() => {
@@ -76,7 +76,7 @@ exports.checkCode = async (req, res) => {
   try {
     const { userCode, email } = req.body
     console.log(`got userCode ${userCode}`);
-    await getCode('madramov.02@gmail.com').then(async (data) => {
+    await getCode(email).then(async (data) => {
       console.log(`redis code is ${data}`);
       if (userCode == data)
         res.status(200).send({ message: 'register could be done' });

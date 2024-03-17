@@ -17,7 +17,11 @@ module.exports = function (app) {
 
   
   //game tournaments
+  app.get("/api/tournaments/getFilters", [authJwt.verifyToken], controller.getFilters);
+  app.get("/api/tournaments/GetTournamentsCount", [authJwt.verifyToken], controller.GetTournamentsCount);
+
   app.get("/api/tournaments/:game/all", [authJwt.verifyToken], controller.getAllByGame);
+
 
   app.get("/api/tournaments/activeAndHistory/all/:game", [authJwt.verifyToken], controller.getAllActiveAndHistoryTournaments);
 
