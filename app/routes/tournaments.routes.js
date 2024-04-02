@@ -12,10 +12,10 @@ module.exports = function (app) {
 
 
   // GC tournaments page
-  app.get("/api/tournaments/all", [authJwt.verifyToken], controller.getAll);
+  app.post("/api/tournaments/all", [authJwt.verifyToken], controller.getAll);
 
+  app.post("/api/tournaments/getTournamentsByFilters", [authJwt.verifyToken], controller.getTournamentsByFilters);
 
-  
   //game tournaments
   app.get("/api/tournaments/getFilters", [authJwt.verifyToken], controller.getFilters);
   app.get("/api/tournaments/GetTournamentsCount", [authJwt.verifyToken], controller.GetTournamentsCount);

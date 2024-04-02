@@ -100,7 +100,9 @@ exports.startSingleMatch = async (req, res) => {
                     player_ID: req.body.player_id,
                     game: req.body.game_name,
                     level_key: req.body.level_key,
-                    isWin: 0
+                    isWin: 0,
+                    end:false
+
                 }).then(() => {
                     res.status(200).send({ message: 'Level has been created!' });
                     return null

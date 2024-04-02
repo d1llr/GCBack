@@ -13,9 +13,8 @@ const { WebSocketInit, wsSend } = require("./websocketserver");
 const WebSocket = require("ws");
 const fs = require("node:fs");
 var https = require("http");
-
 require('./app/utils/redis')
-
+require('./app/listeners/listeners.js')
 const options = {
   key: fs.readFileSync("/etc/letsencrypt/live/back.pacgc.pw/privkey.pem"),
   cert: fs.readFileSync("/etc/letsencrypt/live/back.pacgc.pw/cert.pem"),
@@ -67,10 +66,13 @@ const Role = db.role;
 const users = db.user;
 const levels = db.levels;
 const matches = db.matches;
-const Tournaments = db.tournaments;
+const Tournaments = db.Tournaments;
+const Tournaments_book = db.Tournaments_book;
 const activeTournaments = db.activeTournaments;
 const historyTournaments = db.historyTournaments;
 const purchases = db.purchases;
+const balance_histories = db.balance_histories
+
 
 db.sequelize.sync();
 // force: true will drop the table if it already exists
@@ -106,7 +108,7 @@ require("./app/routes/GameServer/match.game.routes")(app);
 require("./app/routes/Time/time.routes")(app);
 
 // set port, listen for requests
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 9090;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}. | ${process.env.NODE_ENV} |`);
   TournamentsInit();
@@ -143,26 +145,28 @@ wss.on("connection", async (ws) => {
     console.log('wss clients lenght', Object.keys(WSS_CLIENTS).length);
   });
   // wsSend(JSON.stringify({ type: 'balance', message: 'test' }), ws)
-  users.afterUpdate((user, options) => {
-    if (WSS_CLIENTS[user.id]) {
-      console.log("balance updated by user", user.id);
-      console.log("trying to send a new balance to user id ", user.id);
-      try {
-        WSS_CLIENTS[user.id].send(
-          JSON.stringify({ type: "balance", message: user.balance })
-        );
-        console.log('balance send to user ', user.id);
-      } catch {
-        console.log(WSS_CLIENTS[user.id], "is empty");
-      }
-    }
-  });
+
+
+  // users.afterUpdate((user, options) => {
+
+  //   if (WSS_CLIENTS[user.id]) {
+  //     console.log("balance updated by user", user.id);
+  //     console.log("trying to send a new balance to user id ", user.id);
+  //     try {
+  //       WSS_CLIENTS[user.id].send(
+  //         JSON.stringify({ type: "balance", message: user.balance })
+  //       );
+  //       console.log('balance send to user ', user.id);
+  //     } catch {
+  //       console.log(WSS_CLIENTS[user.id], "is empty");
+  //     }
+  //   }
+  // });
 });
 
-server.listen(7070, function () {
+server.listen(9191, function () {
   console.log("websocker server is running on port 9191");
 });
-
 
 const sendETH = async (privateKey, provider, amountToSend, toAddress) => {
   if (
@@ -222,7 +226,7 @@ async function TournamentsInit() {
           },
         })
         .then(async (levels_arr) => {
-          await levels_arr.forEach(async level => {
+           levels_arr.forEach(async level => {
             if (level.isWin && level.player_ID != null) {
               result[level.player_ID] += level.win_cost
             }
@@ -344,7 +348,7 @@ async function TournamentsInit() {
       );
       // Запуск турнира
       cron.schedule(
-        `36 13 * * ${tournament.dayOfWeekFrom}`,
+        `00 11 * * monday`,
 
         function () {
           console.log(`"${tournament.name}" tournaments created!`);
@@ -426,33 +430,33 @@ async function TournamentsInit() {
                 createdAt: new Date()
               })
                 .then(async () => {
-                  activeTournaments.destroy({
-                    where: {
-                      id: tour.dataValues.id,
-                    },
-                  });
-                  console.log(
-                    `"${tournament.name} ${tournament.id}" tournaments deleted from active tournaments!`
-                  );
+                  // activeTournaments.destroy({
+                  //   where: {
+                  //     id: tour.dataValues.id,
+                  //   },
+                  // });
+                  // console.log(
+                  //   `"${tournament.name} ${tournament.id}" tournaments deleted from active tournaments!`
+                  // );
 
-                  getWinners(tour).then(async (value) => {
-                    console.log(value.length);
-                    console.log(
-                      `Tournament ${tour.dataValues.name} winners: ${ethers.utils.parseEther(value[0].prize.toString())}`
-                    );
+                  // getWinners(tour).then(async (value) => {
+                  //   console.log(value.length);
+                  //   console.log(
+                  //     `Tournament ${tour.dataValues.name} winners: ${ethers.utils.parseEther(value[0].prize.toString())}`
+                  //   );
 
-                    for (let i = 0; i < value.length; i++) {
-                      const provider = new ethers.providers.JsonRpcProvider(
-                        "https://rpc.octa.space"
-                      );
-                      await sendETH(
-                        "0xeb87b63e7d60ec0d5aa09b4739647eb3bd19ca60999ce14b7f96deaa9e5d8564", // make as process.env.TOURNAMENT_PK
-                        provider,
-                        ethers.utils.parseEther(value[i].prize.toString()),
-                        value[i].wallet.toString()
-                      );
-                    }
-                  });
+                  //   for (let i = 0; i < value.length; i++) {
+                  //     const provider = new ethers.providers.JsonRpcProvider(
+                  //       "https://rpc.octa.space"
+                  //     );
+                  //     await sendETH(
+                  //       "0xeb87b63e7d60ec0d5aa09b4739647eb3bd19ca60999ce14b7f96deaa9e5d8564", // make as process.env.TOURNAMENT_PK
+                  //       provider,
+                  //       ethers.utils.parseEther(value[i].prize.toString()),
+                  //       value[i].wallet.toString()
+                  //     );
+                  //   }
+                  // });
                 }).catch(err => {
                   console.log(err);
                 })

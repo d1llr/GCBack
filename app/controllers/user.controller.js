@@ -1,6 +1,6 @@
 const db = require("../models");
 const { user: user } = db;
-const { matches: matches, levels: levels, purchases: purchases, activeTournaments: activeTournaments, games: games } = db;
+const { matches: matches, levels: levels, purchases: purchases, activeTournaments: activeTournaments, games: games, balance_histories: balance_histories } = db;
 const bcrypt = require("bcryptjs");
 
 
@@ -33,8 +33,6 @@ exports.getUserName = (req, res) => {
     res.status(500).send({ message: 'Username не существует' });
   };
 };
-
-
 exports.changePassword = (req, res) => {
   console.log(req.body);
   try {
@@ -222,29 +220,30 @@ exports.getIdByToken = (req, res) => {
 };
 
 
-exports.getUserHistory = (req, res) => {
+exports.getUserHistory = async (req, res) => {
   var arr = []
   var essence;
   const essenceArray = { 'matches': matches, 'levels': levels }
   try {
-    games.findAll({
+    await games.findAll({
       attributes: ['code', 'essence'],
       where: {
         active: true
       },
     }).then(async (founded) => {
-      await founded.forEach(game => {
+      await founded.forEach(async game => {
         if (req.body.game == game.code)
-          essence = essenceArray[game.essence]
-
+          essence = await essenceArray[game.essence]
       });
       await essence.findAll({
         where: {
           game: req.body.game,
         },
+        include: balance_histories,
         order: [['createdAt', "DESC"]],
       }).then(founded => {
         founded.map(match => {
+          console.log(match.id, ' : ', match.balance_history?.newBalance);
           if (match.player_IDs) {
             if (match.player_IDs?.split(',')?.includes(req.body.id.toString())) {
               arr.push({
@@ -261,7 +260,8 @@ exports.getUserHistory = (req, res) => {
                 title: match.level,
                 isWinner: match.isWin ? true : false,
                 match_cost: match.isWin ? match.win_cost : match.lose_cost,
-                createdAt: match.createdAt
+                createdAt: match.createdAt,
+                balance: match.balance_history?.newBalance
               })
             }
           }
@@ -350,13 +350,20 @@ exports.setWallet = (req, res) => {
         id: req.body.id
       }
     }).then(u => {
-      u.update({
-        wallet: req.body.wallet
-      })
-        .then(() => {
-          res.status(200).send('Wallet init success');
-
+      if (u.wallet == null) {
+        u.update({
+          wallet: req.body.wallet
         })
+          .then(() => {
+            res.status(200).send('Wallet init success');
+
+          })
+      } else if (u.wallet !== req.body.wallet) {
+        res.status(503).send({ message: 'Wallet already exist!' });
+      } else {
+        res.status(200).send({ message: 'Wallet init success' });
+      }
+
     })
   }
   catch {

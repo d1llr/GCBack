@@ -5,16 +5,44 @@ const { logger } = require("ethers");
 const { tournaments: tournaments, activeTournaments: activeTournaments, historyTournaments: historyTournaments, user: users, matches: matches, levels: levels, purchases: purchases, tournamentsLevel: tournamentsLevel } = db;
 const Op = db.Sequelize.Op;
 
-exports.getAll = (req, res) => {
+exports.getAll = async (req, res) => {
   try {
-    activeTournaments.findAll().then(tournament => {
-      res.send(tournament);
+    let arr = []
+    await activeTournaments.findAll().then(tournament => {
+      arr.push({ 'active': tournament })
     });
+    await historyTournaments.findAll().then(tournament => {
+      arr.push({ 'history': tournament })
+    });
+    console.log(req.body.offset, req.body.offset + req.body.limit);
+    await res.status(200).json(arr.slice(req.body.offset, req.body.offset + req.body.limit));
   }
   catch {
     res.status(500).send({ message: err.message });
   };
 };
+
+exports.getTournamentsByFilters = async (req, res) => {
+  try {
+    let arr = []
+    let active = []
+    let history = []
+    await activeTournaments.findAll().then(tournament => {
+      active = tournament
+    });
+    await historyTournaments.findAll().then(tournament => {
+      history = tournament
+    });
+
+    Object.values(req.body).map()
+    console.log(active);
+    await res.status(200).json({ active: active, history: history });
+  }
+  catch {
+    res.status(500).send({ message: " " });
+  };
+};
+
 
 
 exports.getAllByGame = (req, res) => {
@@ -61,7 +89,7 @@ exports.GetTournamentsCount = async (req, res) => {
   const arr = []
   try {
     const { count, rows } = await activeTournaments.findAndCountAll()
-    const { count:historyCount, historyRows } = await historyTournaments.findAndCountAll()
+    const { count: historyCount, historyRows } = await historyTournaments.findAndCountAll()
     console.log("activeCount", count);
     res.status(200).json(count + historyCount)
 
