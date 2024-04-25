@@ -1,4 +1,4 @@
-module.exports = (sequelize, Sequelize) => {
+export default (sequelize, Sequelize) => {
   const Tournaments = sequelize.define("tournaments", {
     image: {
       type: Sequelize.STRING

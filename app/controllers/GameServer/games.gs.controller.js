@@ -1,8 +1,8 @@
-const db = require("../../models").default;
+import db from "../../models/index.js";
 const { gameVersion: gameVersion } = db;
 
 
-exports.checkVersion = (req, res) => {
+export function checkVersion(req, res) {
   console.log(`checking game version of game: ${req.params["name"]}`);
   try {
     if (req.params["name"])
@@ -20,6 +20,6 @@ exports.checkVersion = (req, res) => {
   catch {
     res.status(500).send({ message: 'checkVersion error!' });
   };
-};
+}
 
 

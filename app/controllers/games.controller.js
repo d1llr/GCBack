@@ -1,9 +1,8 @@
-const db = require("../models").default;
+import db from "../models/index.js";
 const { games: games } = db;
-const fs = require('fs');
 
 
-exports.getAll = (req, res) => {
+export function getAll(req, res) {
   try {
     games.findAll({
       attributes: ['id', 'name', 'short_desc', 'active']
@@ -14,9 +13,9 @@ exports.getAll = (req, res) => {
   catch {
     res.status(500).send({ message: err.message });
   };
-};
+}
 
-exports.getById = (req, res) => {
+export function getById(req, res) {
   try {
     games.findOne({
       attributes: ['id', 'name', 'short_desc', 'links', 'code'],
@@ -30,6 +29,6 @@ exports.getById = (req, res) => {
   catch {
     res.status(500).send({ message: 'gameId не существует' });
   };
-};
+}
 
 

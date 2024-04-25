@@ -1,4 +1,25 @@
 import { DB, USER, PASSWORD, HOST, dialect as _dialect, pool as _pool } from "../config/db.config.js";
+import User from './user.model.js'
+import Games from './games.model.js'
+import Nft from './nft.model.js'
+import Tournaments from './Tournaments/tournaments.model.js'
+import activeTournaments from './Tournaments/activeTournaments.model.js'
+import historyTournaments from './Tournaments/historyTournaments.model.js'
+import tournamentsLevels from './Tournaments/tournamentsLevels.js'
+import Role from './role.model.js'
+import RefreshToken from './refreshToken.model.js'
+import Purchases from "./purchases.model.js";
+import gameVersion from './GameServer/gamesVersion.model.js'
+import api_key from './GameServer/api.key.model.js'
+import matches from './GameServer/matches.model.js'
+import levels from './GameServer/levels.model.js'
+import balance_histories from './balance_histories.model.js'
+import deal_history from './deal_history.model.js'
+import Subscriptions from './Subscriptions/subscriptions.model.js'
+import Subscribe_limits from './Subscriptions/subscribe_limits.model.js'
+import Subscription_features from './Subscriptions/subscription_feautures.model.js'
+import Users_subscriptions from './Subscriptions/users_subscriptions.models.js'
+
 
 import Sequelize from "sequelize";
 const sequelize = new Sequelize(
@@ -23,39 +44,38 @@ const sequelize = new Sequelize(
 
 const db = {};
 
-db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
-db.user = require("../models/user.model.js").default(sequelize, Sequelize);
-db.games = require("../models/games.model.js")(sequelize, Sequelize);
-db.nft = require("../models/nft.model.js")(sequelize, Sequelize);
-db.Tournaments = require("../models/Tournaments/tournaments.model.js")(sequelize, Sequelize);
-db.activeTournaments = require("../models/Tournaments/activeTournaments.model.js")(sequelize, Sequelize);
-db.historyTournaments = require("../models/Tournaments/historyTournaments.model.js")(sequelize, Sequelize);
-db.role = require("../models/role.model.js")(sequelize, Sequelize);
-db.refreshToken = require("../models/refreshToken.model.js")(sequelize, Sequelize);
+db.user = User(sequelize, Sequelize)
+db.games = Games(sequelize, Sequelize)
+db.nft = Nft(sequelize, Sequelize)
+db.Tournaments = Tournaments(sequelize, Sequelize)
+db.activeTournaments = activeTournaments(sequelize, Sequelize)
+db.historyTournaments = historyTournaments(sequelize, Sequelize)
+db.role = Role(sequelize, Sequelize)
+db.refreshToken = RefreshToken(sequelize, Sequelize)
 
 // Покупки
 
-db.purchases = require("../models/purchases.model.js")(sequelize, Sequelize);
+db.purchases = Purchases(sequelize, Sequelize);
 
 //GAME SERVER
 
-db.gameVersion = require('../models/GameServer/gamesVersion.model.js')(sequelize, Sequelize);
-db.api_key = require('../models/GameServer/api.key.model.js').default(sequelize, Sequelize);
-db.matches = require('../models/GameServer/matches.model.js')(sequelize, Sequelize);
-db.levels = require('../models/GameServer/levels.model.js')(sequelize, Sequelize);
-db.tournamentsLevel = require('../models/Tournaments/tournamentsLevels.js')(sequelize, Sequelize);
-db.balance_histories = require('../models/balance_histories.model.js').default(sequelize, Sequelize);
-db.deal_history = require('../models/deal_history.model.js')(sequelize, Sequelize);
+db.gameVersion = gameVersion(sequelize, Sequelize);
+db.api_key = api_key(sequelize, Sequelize);
+db.matches = matches(sequelize, Sequelize);
+db.levels = levels(sequelize, Sequelize);
+db.tournamentsLevel = tournamentsLevels(sequelize, Sequelize);
+db.balance_histories = balance_histories(sequelize, Sequelize);
+db.deal_history = deal_history(sequelize, Sequelize);
 
 
 // --------------------------------------------------------------------- //
 // subscriptions //
-db.Subscriptions = require('../models/subscriptions.model.js').default(sequelize, Sequelize);
-db.Subscribe_limits = require('./subscribe_limits.model.js')(sequelize, Sequelize);
-db.subscription_feautures = require('../models/subscription_feautures.model.js').default(sequelize, Sequelize);
-db.users_subscriptions = require('../models/users_subscriptions.models.js').default(sequelize, Sequelize);
+db.Subscriptions = Subscriptions(sequelize, Sequelize);
+db.Subscribe_limits = Subscribe_limits(sequelize, Sequelize);
+db.subscription_feautures = Subscription_features(sequelize, Sequelize);
+db.users_subscriptions = Users_subscriptions(sequelize, Sequelize);
 // --------------------------------------------------------------------- //
 
 db.role.belongsToMany(db.user, {

@@ -1,7 +1,8 @@
-import { checkDuplicateUsername, checkDuplicateEmail, checkRolesExisted, checkExpiredSubscription } from "../middleware/index.js";
+import { checkDuplicateEmail, checkDuplicateUsername, checkRolesExisted } from "../middleware/verifySignUp.js";
+import { checkExpiredSubscription } from "../middleware/SubscriptionExpiration.js";
 import { signup, sendCode, checkCode, signin, refreshToken } from "../controllers/auth.controller.js";
 
-export default function (app) {
+export default function Auth(app) {
   app.use(function (req, res, next) {
     res.header(
       "Access-Control-Allow-Headers",

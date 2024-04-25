@@ -1,7 +1,7 @@
-const { authJwt } = require("../../middleware").default;
-const controller = require("../../controllers/Time/time.controller.js");
+import { verifyToken } from "../../middleware/authJwt.js";
+import { getCurrentDay } from "../../controllers/Time/time.controller.js";
 
-module.exports = function (app) {
+export default function TimeRoutes (app) {
   app.use(function (req, res, next) {
     res.header(
       "Access-Control-Allow-Headers",
@@ -10,5 +10,5 @@ module.exports = function (app) {
     next();
   });
 
-  app.get("/api/time/getCurrentDay", [authJwt.verifyToken], controller.getCurrentDay);
+  app.get("/api/time/getCurrentDay", [verifyToken], getCurrentDay);
 };

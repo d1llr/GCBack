@@ -4,9 +4,14 @@ import { readFileSync } from "node:fs";
 
 const { Server } = pkg;
 
+// const options = {
+//     key: readFileSync("/etc/letsencrypt/live/back.pacgc.pw/privkey.pem"),
+//     cert: readFileSync("/etc/letsencrypt/live/back.pacgc.pw/cert.pem"),
+// };
+
 const options = {
-    key: readFileSync("/etc/letsencrypt/live/back.pacgc.pw/privkey.pem"),
-    cert: readFileSync("/etc/letsencrypt/live/back.pacgc.pw/cert.pem"),
+    key: 'test',
+    cert: 'test'
 };
 
 const server = createServer(options, function (req, res) {

@@ -1,4 +1,4 @@
-module.exports = (sequelize, Sequelize) => {
+export default (sequelize, Sequelize) => {
   const Subscribe_limits = sequelize.define("subscribe_limits", {
     id: {
       type: Sequelize.INTEGER,

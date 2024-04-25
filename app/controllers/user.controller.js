@@ -1,5 +1,5 @@
 
-const db = require("../models").default;
+import db from "../models/index.js";
 const { user: user } = db;
 const {
   matches: matches,
@@ -14,16 +14,17 @@ const {
   subscription_change: subscription_change,
 } = db;
 
-const Op = db.Sequelize.Op;
+const Op = db.sequelize.Op;
 
 
-const Sequelize = require("sequelize");
+import Sequelize from "sequelize";
 
-const bcrypt = require("bcryptjs");
+import hashSync from "bcryptjs";
+import compareSync from "bcryptjs";
 
 
 
-exports.getInfoById = (req, res) => {
+export function getInfoById(req, res) {
   try {
     user.findOne({
       where: {
@@ -37,8 +38,8 @@ exports.getInfoById = (req, res) => {
   catch {
     res.status(500).send({ message: 'gameId не существует' });
   };
-};
-exports.getUserName = (req, res) => {
+}
+export function getUserName(req, res) {
   try {
     user.findOne({
       where: {
@@ -51,8 +52,8 @@ exports.getUserName = (req, res) => {
   catch {
     res.status(500).send({ message: 'Username не существует' });
   };
-};
-exports.changePassword = (req, res) => {
+}
+export function changePassword(req, res) {
   console.log(req.body);
   try {
     user.findOne({
@@ -61,7 +62,7 @@ exports.changePassword = (req, res) => {
       }
     }).then(founded => {
       founded.update({
-        password: bcrypt.hashSync(req.body.password, 8)
+        password: hashSync(req.body.password, 8)
       })
       res.status(200).send({ message: 'Password updated successfully!' });
       return null
@@ -73,9 +74,9 @@ exports.changePassword = (req, res) => {
   catch {
     res.status(500).send({ message: 'Username не существует' });
   };
-};
+}
 
-exports.checkOldPassword = (req, res) => {
+export function checkOldPassword(req, res) {
   console.log(req.body);
   try {
     user.findOne({
@@ -83,7 +84,7 @@ exports.checkOldPassword = (req, res) => {
         email: req.body.email
       }
     }).then(founded => {
-      if (bcrypt.compareSync(req.body.OldPassword, founded.password))
+      if (compareSync(req.body.OldPassword, founded.password))
         res.status(200).send({ message: 'Old pass is true' });
       else {
         res.status(400).send({ message: 'Old pass is false' });
@@ -97,9 +98,9 @@ exports.checkOldPassword = (req, res) => {
   catch {
     res.status(500).send({ message: 'Username не существует' });
   };
-};
+}
 
-exports.changeEmail = (req, res) => {
+export function changeEmail(req, res) {
   console.log(req.body);
   try {
     user.findOne({
@@ -120,9 +121,9 @@ exports.changeEmail = (req, res) => {
   catch {
     res.status(500).send({ message: 'user не существует' });
   };
-};
+}
 
-exports.changeUserData = (req, res) => {
+export function changeUserData(req, res) {
   console.log(req.body);
   try {
     user.findOne({
@@ -144,9 +145,9 @@ exports.changeUserData = (req, res) => {
   catch {
     res.status(500).send({ message: 'UserData не существует' });
   };
-};
+}
 
-exports.deleteAccount = (req, res) => {
+export function deleteAccount(req, res) {
   console.log(req.body);
   try {
     user.destroy({
@@ -164,9 +165,9 @@ exports.deleteAccount = (req, res) => {
   catch {
     res.status(500).send({ message: 'user не существует' });
   };
-};
+}
 
-exports.Purchases = async (req, res) => {
+export async function Purchases(req, res) {
   try {
     const getTournamentPlayers = async () => {
       var tournament_key = []
@@ -219,9 +220,9 @@ exports.Purchases = async (req, res) => {
   catch {
     res.status(500).send({ message: 'Purchases error!' });
   };
-};
+}
 
-exports.Sell = async (req, res) => {
+export async function Sell(req, res) {
   try {
     if (Number(req.body.cost) > 0) {
       user.findOne({
@@ -247,9 +248,9 @@ exports.Sell = async (req, res) => {
   catch {
     res.status(500).send({ message: 'Purchases error!' });
   };
-};
+}
 
-exports.getIdByToken = (req, res) => {
+export function getIdByToken(req, res) {
   try {
     user.findOne({
       where: {
@@ -262,9 +263,9 @@ exports.getIdByToken = (req, res) => {
   catch {
     res.status(500).send({ message: 'gameId не существует' });
   };
-};
+}
 
-exports.getUserFee = (req, res) => {
+export function getUserFee(req, res) {
   try {
     user.findOne({
       where: {
@@ -284,9 +285,9 @@ exports.getUserFee = (req, res) => {
   catch {
     res.status(500).send({ message: 'gameId не существует' });
   };
-};
+}
 
-exports.getUserHistory = async (req, res) => {
+export async function getUserHistory(req, res) {
   var arr = []
   var essence;
   const essenceArray = { 'matches': matches, 'levels': levels }
@@ -349,9 +350,9 @@ exports.getUserHistory = async (req, res) => {
   catch {
     res.status(500).send({ message: 'gameId не существует' });
   };
-};
+}
 
-exports.GetUserGamesCount = (req, res) => {
+export function GetUserGamesCount(req, res) {
   var essence;
   var arr = []
   const essenceArray = { 'matches': matches, 'levels': levels }
@@ -407,7 +408,7 @@ exports.GetUserGamesCount = (req, res) => {
   }
 }
 
-exports.setWallet = (req, res) => {
+export function setWallet(req, res) {
   // Save User to Database
   console.log(req.body);
   try {
@@ -435,9 +436,9 @@ exports.setWallet = (req, res) => {
   catch {
     res.status(500).send({ message: 'Wallet error!' });
   };
-};
+}
 
-exports.removeWallet = (req, res) => {
+export function removeWallet(req, res) {
   // Save User to Database
   console.log(req.body);
   try {
@@ -458,9 +459,9 @@ exports.removeWallet = (req, res) => {
   catch {
     res.status(500).send({ message: 'Wallet error!' });
   };
-};
+}
 
-exports.getSubscription = (req, res) => {
+export function getSubscription(req, res) {
 
   try {
     Subscriptions.findAll({
@@ -500,9 +501,9 @@ exports.getSubscription = (req, res) => {
   catch {
     res.status(500).send({ message: 'Subscriptions getting error!' });
   };
-};
+}
 
-exports.getSubscriptionById = (req, res) => {
+export function getSubscriptionById(req, res) {
   try {
     Subscriptions.findOne({
       where: {
@@ -532,9 +533,9 @@ exports.getSubscriptionById = (req, res) => {
   catch {
     res.status(500).send({ message: 'Subscriptions getting error!' });
   };
-};
+}
 
-exports.getAvaliableLevels = (req, res) => {
+export function getAvaliableLevels(req, res) {
   try {
     Subscriptions.findOne({
       where: {
@@ -557,9 +558,9 @@ exports.getAvaliableLevels = (req, res) => {
   catch {
     res.status(500).send({ message: 'Subscriptions getting error!' });
   };
-};
+}
 
-exports.changeSubscription = (req, res) => {
+export function changeSubscription(req, res) {
   try {
     user.findOne({
       where: {
@@ -609,9 +610,9 @@ exports.changeSubscription = (req, res) => {
   catch {
     res.status(500).send({ message: 'custom error' });
   };
-};
+}
 
-exports.changeAutoRenew = (req, res) => {
+export function changeAutoRenew(req, res) {
   try {
     db.users_subscriptions.update({
       autoRenewal: req.body.autorenewal,
@@ -626,9 +627,9 @@ exports.changeAutoRenew = (req, res) => {
   catch {
     res.status(500).send({ message: 'custom error' });
   };
-};
+}
 
-exports.getBalance = (req, res) => {
+export function getBalance(req, res) {
   try {
     user.findOne({
       where: {
@@ -646,9 +647,9 @@ exports.getBalance = (req, res) => {
   catch {
     res.status(500).send({ message: 'gameId не существует' });
   };
-};
+}
 
-exports.rechargeBalance = (req, res) => {
+export function rechargeBalance(req, res) {
   // Save User to Database
   console.log(req.body);
   try {
@@ -673,9 +674,9 @@ exports.rechargeBalance = (req, res) => {
   catch {
     res.status(500).send({ message: 'Balance error!' });
   };
-};
+}
 
-exports.canIWithdraw = (req, res) => {
+export function canIWithdraw(req, res) {
   // Save User to Database\
   console.log(req.body);
   try {
@@ -727,9 +728,9 @@ exports.canIWithdraw = (req, res) => {
   catch {
     res.status(500).send({ message: 'Balance error!' });
   };
-};
+}
 
-exports.withdrawBalance = (req, res) => {
+export function withdrawBalance(req, res) {
   // Save User to Database
   console.log('trying to withdraw');
   console.log(req.body);
@@ -757,17 +758,17 @@ exports.withdrawBalance = (req, res) => {
   catch {
     res.status(500).send({ message: 'Balance error!' });
   };
-};
+}
 
-exports.userBoard = (req, res) => {
+export function userBoard(req, res) {
   res.status(200).send("User Content.");
-};
+}
 
-exports.adminBoard = (req, res) => {
+export function adminBoard(req, res) {
   res.status(200).send("Admin Content.");
-};
+}
 
-exports.moderatorBoard = (req, res) => {
+export function moderatorBoard(req, res) {
   res.status(200).send("Moderator Content.");
-};
+}
 

@@ -1,5 +1,5 @@
 
-exports.getCurrentDay = (req, res) => {
+export function getCurrentDay(req, res) {
     try {
         const now = new Date();
 
@@ -9,7 +9,7 @@ exports.getCurrentDay = (req, res) => {
         ];
         const dayOfWeek = daysOfWeek[now.getDay()];
 
-        res.status(200).send({dayOfWeek});
+        res.status(200).send({ dayOfWeek });
 
         // get the current time
         const time = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric' });
@@ -17,16 +17,16 @@ exports.getCurrentDay = (req, res) => {
     catch {
         res.status(500).send({ message: err.message });
     };
-};
-exports.getCurrentSupply = (req, res) => {
+}
+export function getCurrentSupply(req, res) {
     try {
-        let a=36157623
+        let a = 36157623
         res.status(200).json(a);
     }
     catch {
         res.status(500).send({ message: 'error' });
     };
-};
+}
 
 
 

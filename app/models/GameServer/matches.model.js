@@ -1,4 +1,4 @@
-module.exports = (sequelize, Sequelize) => {
+export default (sequelize, Sequelize) => {
     const matches = sequelize.define("matches", {
         match_key: {
             type: Sequelize.STRING

@@ -1,5 +1,3 @@
-import sub
-const { subscription_feautures } = default
 
 export default (sequelize, Sequelize) => {
   const Subscription_features = sequelize.define("subscription_features", {

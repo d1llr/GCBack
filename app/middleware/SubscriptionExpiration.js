@@ -1,4 +1,5 @@
 import { wssSend } from "../utils/wss.js";
+import db from "../models/index.js";
 const { users_subscriptions: user_subs, refreshToken: RefreshToken, Subscriptions } = db;
 
 export const checkExpiredSubscription = async (req, res, next) => {

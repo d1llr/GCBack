@@ -1,4 +1,4 @@
-module.exports = (sequelize, Sequelize) => {
+export default (sequelize, Sequelize) => {
     const deal_history = sequelize.define("deal_history", {
       id: {
         type: Sequelize.INTEGER,

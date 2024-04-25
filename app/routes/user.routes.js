@@ -1,4 +1,8 @@
-import { verifyToken, verifyApiKey, checkDuplicateEmail, checkDuplicateUsername } from "../middleware";
+
+import { verifyToken } from "../middleware/authJwt.js";
+import { verifyApiKey } from "../middleware/authAPI.js";
+import { checkDuplicateEmail } from "../middleware/verifySignUp.js";
+import { checkDuplicateUsername } from "../middleware/verifySignUp.js";
 import {
   getInfoById,
   getUserName,
@@ -7,8 +11,10 @@ import {
   getUserHistory,
   GetUserGamesCount,
   changePassword, checkOldPassword, changeEmail, changeUserData, deleteAccount, Purchases, Sell, setWallet, removeWallet, getSubscription, getSubscriptionById, getAvaliableLevels, changeSubscription, changeAutoRenew, rechargeBalance, canIWithdraw, withdrawBalance, moderatorBoard, adminBoard
-} from "../controllers/user.controller";
-export default function (app) {
+} from "../controllers/user.controller.js";
+
+
+export default function User(app) {
   app.use(function (req, res, next) {
     res.header(
       "Access-Control-Allow-Headers",

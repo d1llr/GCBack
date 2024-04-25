@@ -1,4 +1,4 @@
-module.exports = (sequelize, Sequelize) => {
+export default (sequelize, Sequelize) => {
     const tournamentsLevels = sequelize.define("tournaments_levels", {
         id: {
             type: Sequelize.INTEGER,

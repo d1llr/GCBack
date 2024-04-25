@@ -1,11 +1,11 @@
-const config = require("../config/image.dir.config");
+import { root as _root } from "../config/image.dir.config.js";
 
-exports.getImage = (req, res) => {
+export function getImage(req, res) {
     filepath = `storage/${req.params['section']}/${req.params['image']}`
-    res.sendFile(filepath, { root: config.root });
-};
+    res.sendFile(filepath, { root: _root });
+}
 
-exports.getGameImage = (req, res) => {
+export function getGameImage(req, res) {
     filepath = `storage/${req.params['section']}/${req.params['game']}/${req.params['image']}`
-    res.sendFile(filepath, { root: config.root });
-};
+    res.sendFile(filepath, { root: _root });
+}

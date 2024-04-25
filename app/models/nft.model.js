@@ -1,4 +1,4 @@
-module.exports = (sequelize, Sequelize) => {
+export default (sequelize, Sequelize) => {
   const Nft = sequelize.define("nft", {
     image: {
       type: Sequelize.STRING

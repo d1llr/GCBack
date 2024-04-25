@@ -1,7 +1,7 @@
-const { authJwt } = require("../../middleware").default;
-const controller = require("../../controllers/Time/time.controller.js");
 
-module.exports = function (app) {
+import { getCurrentSupply } from "../../controllers/Time/time.controller.js";
+
+export default function OtherRoutes (app) {
   app.use(function (req, res, next) {
     res.header(
       "Access-Control-Allow-Headers",
@@ -10,5 +10,5 @@ module.exports = function (app) {
     next();
   });
 
-  app.get("/api/getCurrentSupply", [], controller.getCurrentSupply);
+  app.get("/api/getCurrentSupply", [], getCurrentSupply);
 };

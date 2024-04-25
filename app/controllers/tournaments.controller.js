@@ -1,10 +1,9 @@
-const e = require("express");
-const db = require("../models").default;
-const { logger } = require("ethers");
-const { tournaments: tournaments, activeTournaments: activeTournaments, historyTournaments: historyTournaments, user: users, matches: matches, levels: levels, purchases: purchases, tournamentsLevel: tournamentsLevel } = db;
-const Op = db.Sequelize.Op;
 
-exports.getAll = async (req, res) => {
+import db from "../models/index.js";
+const { tournaments: tournaments, activeTournaments: activeTournaments, historyTournaments: historyTournaments, user: users, matches: matches, levels: levels, purchases: purchases, tournamentsLevel: tournamentsLevel } = db;
+const Op = db.sequelize.Op;
+
+export async function getAll(req, res) {
   try {
     let arr = []
     await activeTournaments.findAll().then(tournament => {
@@ -19,9 +18,9 @@ exports.getAll = async (req, res) => {
   catch {
     res.status(500).send({ message: err.message });
   };
-};
+}
 
-exports.getTournamentsByFilters = async (req, res) => {
+export async function getTournamentsByFilters(req, res) {
   try {
     let arr = []
     let active = []
@@ -40,9 +39,9 @@ exports.getTournamentsByFilters = async (req, res) => {
   catch {
     res.status(500).send({ message: " " });
   };
-};
+}
 
-exports.getAllByGame = (req, res) => {
+export function getAllByGame(req, res) {
   console.log(req.body.game);
   try {
     activeTournaments.findAll({
@@ -57,9 +56,9 @@ exports.getAllByGame = (req, res) => {
   catch {
     res.status(500).send({ message: err.message });
   };
-};
+}
 
-exports.getFilters = async (req, res) => {
+export async function getFilters(req, res) {
   const arr = []
   try {
     await activeTournaments.findAll({
@@ -80,9 +79,9 @@ exports.getFilters = async (req, res) => {
   catch {
     res.status(500).send({ message: 'Error' });
   };
-};
+}
 
-exports.GetTournamentsCount = async (req, res) => {
+export async function GetTournamentsCount(req, res) {
   const arr = []
   try {
     const { count, rows } = await activeTournaments.findAndCountAll()
@@ -94,9 +93,9 @@ exports.GetTournamentsCount = async (req, res) => {
   catch {
     res.status(500).send({ message: 'Error' });
   };
-};
+}
 
-exports.getAllActiveAndHistoryTournaments = async (req, res) => {
+export async function getAllActiveAndHistoryTournaments(req, res) {
   const response = {
     active: {},
     history: {}
@@ -127,9 +126,9 @@ exports.getAllActiveAndHistoryTournaments = async (req, res) => {
   catch {
     res.status(404).send({ message: 'Error' });
   };
-};
+}
 
-exports.getTournamentMapById = (req, res) => {
+export function getTournamentMapById(req, res) {
   try {
     activeTournaments.findOne({
       where: {
@@ -142,9 +141,9 @@ exports.getTournamentMapById = (req, res) => {
   catch {
     res.status(500).send({ message: err.message });
   };
-};
+}
 
-exports.getHistory = (req, res) => {
+export function getHistory(req, res) {
   try {
     historyTournaments.findAll().then(tournament => {
       res.send(tournament);
@@ -153,9 +152,9 @@ exports.getHistory = (req, res) => {
   catch {
     res.status(500).send({ message: err.message });
   };
-};
+}
 
-exports.getById = (req, res) => {
+export function getById(req, res) {
   try {
     activeTournaments.findOne({
       where: {
@@ -177,9 +176,9 @@ exports.getById = (req, res) => {
   catch {
     res.status(500).send({ message: 'tournamentId не существует' });
   };
-};
+}
 
-exports.getByIdFromHistory = (req, res) => {
+export function getByIdFromHistory(req, res) {
   try {
     historyTournaments.findOne({
       where: {
@@ -193,10 +192,10 @@ exports.getByIdFromHistory = (req, res) => {
   catch {
     res.status(500).send({ message: 'tournamentId не существует' });
   };
-};
+}
 
 // Участие в активном турнире
-exports.getParticipate = (req, res) => {
+export function getParticipate(req, res) {
   try {
     activeTournaments.findByPk(Number(req.body.tournament_id))
       .then((founded) => {
@@ -275,9 +274,9 @@ exports.getParticipate = (req, res) => {
   catch {
     res.status(500).send({ message: 'tournamentId не существует' });
   };
-};
+}
 
-exports.getRating = (req, res) => {
+export function getRating(req, res) {
   var result = {}
   var resp = []
   var tournamentType;
@@ -678,6 +677,6 @@ exports.getRating = (req, res) => {
   catch {
     res.status(500).send({ message: 'tournamentId не существует' });
   };
-};
+}
 
 

@@ -1,7 +1,8 @@
 import { Wallet, constants as _constants, utils, providers } from "ethers";
 import express, { json, urlencoded } from "express";
 import cors from "cors";
-require("dotenv").config({ path: `.env.${process.env.NODE_ENV.trim()}` });
+import db from "./app/models/index.js";
+// require("dotenv").config({ path: `.env.${process.env.NODE_ENV.trim()}` });
 const app = express();
 
 import { schedule } from "node-cron";
@@ -12,7 +13,7 @@ import { log } from "node:console";
 // const WebSocket = require("ws");
 // const fs = require("node:fs");
 // var https = require("http");
-import  './app/utils/redis.js';
+import './app/utils/redis.js';
 import './app/listeners/listeners.js';
 // const options = {
 //   key: fs.readFileSync("/etc/letsencrypt/live/back.pacgc.pw/privkey.pem"),
@@ -60,7 +61,7 @@ app.use(urlencoded({ extended: true }));
 
 // databas
 
-_sequelize.sync();
+db.sequelize.sync();
 // force: true will drop the table if it already exists
 // db.sequelize.sync({force: true}).then(() => {
 //   console.log('Drop and Resync Database with { force: true }');
@@ -91,19 +92,31 @@ app.get("/", (req, res) => {
 //   });
 // });
 // routes
-import "./app/routes/auth.routes.js"
-// require("./app/routes/auth.routes").default(app);
-require("./app/routes/user.routes")(app);
-require("./app/routes/games.routes")(app);
-require("./app/routes/nft.routes")(app);
-require("./app/routes/tournaments.routes")(app);
+import Auth from "./app/routes/auth.routes.js"
+Auth(app)
+import User from "./app/routes/user.routes.js"
+User(app)
+import Games from './app/routes/games.routes.js'
+Games(app)
+import NFTS from './app/routes/nft.routes.js'
+NFTS(app)
+import Tournaments from './app/routes/tournaments.routes.js'
+Tournaments(app)
+import Storage from './app/routes/storage.routes.js'
+Storage(app)
+import UserGames from './app/routes/GameServer/user.game.routes.js'
+UserGames(app)
+import GameClientRoutes from './app/routes/GameServer/game.client.routes.js'
+GameClientRoutes(app)
+import MatchGameRoutes from './app/routes/GameServer/match.game.routes.js'
+MatchGameRoutes(app)
+import TimeRoutes from './app/routes/Time/time.routes.js'
+TimeRoutes(app)
+import OtherRoutes from './app/routes/Time/other.routes.js'
+OtherRoutes(app)
 
-require("./app/routes/storage.routes")(app);
-require("./app/routes/GameServer/user.game.routes")(app);
-require("./app/routes/GameServer/game.client.routes")(app);
-require("./app/routes/GameServer/match.game.routes")(app);
-require("./app/routes/Time/time.routes")(app);
-require("./app/routes/Time/other.routes")(app);
+
+
 // set port, listen for requests
 const PORT = process.env.PORT || 9090;
 app.listen(PORT, () => {

@@ -1,4 +1,4 @@
-module.exports = (sequelize, Sequelize) => {
+export default (sequelize, Sequelize) => {
     const gameVersion = sequelize.define("game_versions", {
         name: {
             type: Sequelize.STRING

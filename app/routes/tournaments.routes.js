@@ -1,7 +1,7 @@
-import {verifyToken} from '../middleware'
-import { getAll, getTournamentsByFilters, getFilters, GetTournamentsCount, getAllByGame, getAllActiveAndHistoryTournaments, getHistory, getById, getTournamentMapById, getByIdFromHistory, getParticipate, getRating } from "../controllers/tournaments.controller";
+import { verifyToken } from "../middleware/authJwt.js";
+import { getAll, getTournamentsByFilters, getFilters, GetTournamentsCount, getAllByGame, getAllActiveAndHistoryTournaments, getHistory, getById, getTournamentMapById, getByIdFromHistory, getParticipate, getRating } from "../controllers/tournaments.controller.js";
 
-export default function (app) {
+export default function Tournaments (app) {
   app.use(function (req, res, next) {
     res.header(
       "Access-Control-Allow-Headers",

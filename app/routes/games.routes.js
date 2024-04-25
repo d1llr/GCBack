@@ -1,7 +1,7 @@
-import { verifyToken } from '../middleware'
-import { getAll, getById } from "../controllers/games.controller";
+import { verifyToken } from "../middleware/authJwt.js";
+import { getAll, getById } from "../controllers/games.controller.js";
 
-export default function (app) {
+export default function Games(app) {
   app.use(function (req, res, next) {
     res.header(
       "Access-Control-Allow-Headers",

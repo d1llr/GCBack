@@ -1,7 +1,7 @@
-import { verifyToken } from '../middleware'
-import { getAll } from "../controllers/nft.controller";
+import { verifyToken } from "../middleware/authJwt.js";
+import { getAll } from "../controllers/nft.controller.js";
 
-export default function (app) {
+export default function NFTS (app) {
   app.use(function (req, res, next) {
     res.header(
       "Access-Control-Allow-Headers",

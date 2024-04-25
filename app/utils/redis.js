@@ -11,7 +11,7 @@ client.on('connect', () => {
 client.on('error', err => console.log('Redis Client Error', err));
 
 
-const setCode = (email, code) => {
+export const setCode = (email, code) => {
     return new Promise(async (resolve, reject) => {
         if (email && code) {
             await client.set(email, code)
@@ -23,7 +23,7 @@ const setCode = (email, code) => {
     })
 }
 
-const getCode = (email) => {
+export const getCode = (email) => {
     return new Promise(async (resolve, reject) => {
         if (email) {
             const value = await client.get(email)
@@ -32,9 +32,4 @@ const getCode = (email) => {
         }
 
     })
-}
-
-
-export default {
-    setCode, getCode
 }

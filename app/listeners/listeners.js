@@ -1,4 +1,4 @@
-const db = require("../models").default;
+import db from "../models/index.js";
 const users = db.user;
 const levels = db.levels;
 const balance_histories = db.balance_histories
