@@ -1,7 +1,7 @@
-const { authJwt } = require("../middleware");
-const controller = require("../controllers/storage.controller");
 
-module.exports = function (app) {
+import { getImage, getGameImage } from "../controllers/storage.controller.js";
+
+export default function Storage (app) {
     app.use(function (req, res, next) {
         res.header(
             "Access-Control-Allow-Headers",
@@ -10,10 +10,10 @@ module.exports = function (app) {
         next();
     });
 
-    app.get("/storage/:section/:image", controller.getImage);
+    app.get("/storage/:section/:image", getImage);
 
 
-    app.get("/storage/:section/:game/:image", controller.getGameImage);
+    app.get("/storage/:section/:game/:image", getGameImage);
     // app.get(
     //   "/api/test/user",
     //   [authJwt.verifyToken],

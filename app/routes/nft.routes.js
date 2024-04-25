@@ -1,7 +1,7 @@
-const { authJwt } = require("../middleware");
-const controller = require("../controllers/nft.controller");
+import { verifyToken } from "../middleware/authJwt.js";
+import { getAll } from "../controllers/nft.controller.js";
 
-module.exports = function (app) {
+export default function NFTS (app) {
   app.use(function (req, res, next) {
     res.header(
       "Access-Control-Allow-Headers",
@@ -10,7 +10,7 @@ module.exports = function (app) {
     next();
   });
 
-  app.get("/api/nft/all", [authJwt.verifyToken], controller.getAll);
+  app.get("/api/nft/all", [verifyToken], getAll);
 
   // app.get(
   //   "/api/test/user",

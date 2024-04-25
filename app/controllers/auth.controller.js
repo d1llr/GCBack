@@ -1,15 +1,17 @@
-const db = require("../models");
-const config = require("../config/auth.config");
+import db from "../models/index.js";
+import { secret, jwtExpiration } from "../config/auth.config.js";
 const { user: User, role: Role, refreshToken: RefreshToken } = db;
 
-const Op = db.Sequelize.Op;
+const Op = db.sequelize.Op;
 
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
-const { sendEmail } = require("../utils/mail");
-const { setCode, getCode } = require("../utils/redis");
+import sign from "jsonwebtoken";
+import hashSync from 'bcryptjs';
+import compareSync from 'bcryptjs';
 
-exports.signup = (req, res) => {
+import { sendEmail } from "../utils/mail.js";
+import { setCode, getCode } from "../utils/redis.js";
+
+export function signup(req, res) {
   // Save User to Database
   console.log(req.body);
   User.create({
@@ -18,7 +20,7 @@ exports.signup = (req, res) => {
     email: req.body.email.trim(),
     wallet: null,
     balance: 0,
-    password: bcrypt.hashSync(req.body.password, 8)
+    password: hashSync(req.body.password, 8)
   })
     .then(user => {
       if (req.body.roles) {
@@ -44,10 +46,10 @@ exports.signup = (req, res) => {
       res.status(500).send({ message: err.message });
     });
 
-};
+}
 
 
-exports.sendCode = async (req, res) => {
+export async function sendCode(req, res) {
   try {
     const { email } = req.body
     let code = Math.floor(Math.random() * 8888) + 1000
@@ -72,7 +74,7 @@ exports.sendCode = async (req, res) => {
   }
 }
 
-exports.checkCode = async (req, res) => {
+export async function checkCode(req, res) {
   try {
     const { userCode, email } = req.body
     console.log(`got userCode ${userCode}`);
@@ -92,18 +94,19 @@ exports.checkCode = async (req, res) => {
   }
 }
 
-exports.signin = (req, res) => {
+export function signin(req, res) {
   User.findOne({
     where: {
       [Op.or]: [{ username: req.body.username.trim() }, { email: req.body.username.trim() }]
-    }
+    },
+    include: db.Subscriptions
   })
     .then(async (user) => {
       if (!user) {
         return res.status(402).send({ message: "User Not found." });
       }
 
-      const passwordIsValid = bcrypt.compareSync(
+      const passwordIsValid = compareSync(
         req.body.password,
         user.password
       );
@@ -115,8 +118,8 @@ exports.signin = (req, res) => {
         });
       }
 
-      const token = jwt.sign({ id: user.id }, config.secret, {
-        expiresIn: config.jwtExpiration
+      const token = sign({ id: user.id }, secret, {
+        expiresIn: jwtExpiration
       });
 
       let refreshToken = await RefreshToken.createToken(user);
@@ -136,6 +139,7 @@ exports.signin = (req, res) => {
           balance: user.balance,
           accessToken: token,
           refreshToken: refreshToken,
+          subscribe: user.subscriptions[0].id
         });
 
       });
@@ -143,9 +147,9 @@ exports.signin = (req, res) => {
     .catch(err => {
       res.status(500).send({ message: err.message });
     });
-};
+}
 
-exports.refreshToken = async (req, res) => {
+export async function refreshToken(req, res) {
   const { refreshToken: requestToken } = req.body;
 
   if (requestToken == null) {
@@ -170,8 +174,8 @@ exports.refreshToken = async (req, res) => {
     }
 
     const user = await refreshToken.getUser();
-    let newAccessToken = jwt.sign({ id: user.id }, config.secret, {
-      expiresIn: config.jwtExpiration,
+    let newAccessToken = sign({ id: user.id }, secret, {
+      expiresIn: jwtExpiration,
     });
     console.warn(`user ${user.id} got new A/R tokens`);
     return res.status(200).json({
@@ -181,6 +185,6 @@ exports.refreshToken = async (req, res) => {
   } catch (err) {
     return res.status(500).send({ message: err });
   }
-};
+}
 
 

@@ -1,6 +1,20 @@
-const { authJwt, authAPI, verifySignUp } = require("../middleware");
-const controller = require("../controllers/user.controller");
-module.exports = function (app) {
+
+import { verifyToken } from "../middleware/authJwt.js";
+import { verifyApiKey } from "../middleware/authAPI.js";
+import { checkDuplicateEmail } from "../middleware/verifySignUp.js";
+import { checkDuplicateUsername } from "../middleware/verifySignUp.js";
+import {
+  getInfoById,
+  getUserName,
+  getIdByToken,
+  getUserFee,
+  getUserHistory,
+  GetUserGamesCount,
+  changePassword, checkOldPassword, changeEmail, changeUserData, deleteAccount, Purchases, Sell, setWallet, removeWallet, getSubscription, getSubscriptionById, getAvaliableLevels, changeSubscription, changeAutoRenew, rechargeBalance, canIWithdraw, withdrawBalance, moderatorBoard, adminBoard
+} from "../controllers/user.controller.js";
+
+
+export default function User(app) {
   app.use(function (req, res, next) {
     res.header(
       "Access-Control-Allow-Headers",
@@ -11,46 +25,58 @@ module.exports = function (app) {
 
 
   // получение инфы о юзере
-  app.get("/api/user/getInfoById/:id", [authJwt.verifyToken], controller.getInfoById);
-  app.get("/api/user/getUserName/:id", [authJwt.verifyToken], controller.getUserName);
-  app.get("/api/user/getIdByToken/:wallet", [authAPI.verifyApiKey], controller.getIdByToken);
-  app.post("/api/user/getUserHistory", [authJwt.verifyToken], controller.getUserHistory);
-  app.post("/api/user/GetUserGamesCount", [authJwt.verifyToken], controller.GetUserGamesCount);
+  app.get("/api/user/getInfoById/:id", [verifyToken], getInfoById);
+  app.get("/api/user/getUserName/:id", [verifyToken], getUserName);
+  app.get("/api/user/getIdByToken/:wallet", [verifyApiKey], getIdByToken);
+  app.get("/api/user/getUserFee/:wallet", [verifyApiKey], getUserFee);
+  app.post("/api/user/getUserHistory", [verifyToken], getUserHistory);
+  app.post("/api/user/GetUserGamesCount", [verifyToken], GetUserGamesCount);
 
 
-  app.post("/api/user/changePassword", [], controller.changePassword);
-  app.post("/api/user/checkOldPassword", [authJwt.verifyToken], controller.checkOldPassword);
-  app.post("/api/user/changeEmail", [verifySignUp.checkDuplicateEmail, authJwt.verifyToken], controller.changeEmail);
-  app.post("/api/user/changeUserData", [authJwt.verifyToken, verifySignUp.checkDuplicateUsername], controller.changeUserData);
-  app.post("/api/user/deleteAccount", [authJwt.verifyToken], controller.deleteAccount);
+  app.post("/api/user/changePassword", [], changePassword);
+  app.post("/api/user/checkOldPassword", [verifyToken], checkOldPassword);
+  app.post("/api/user/changeEmail", [checkDuplicateEmail, verifyToken], changeEmail);
+  app.post("/api/user/changeUserData", [verifyToken, checkDuplicateUsername], changeUserData);
+  app.post("/api/user/deleteAccount", [verifyToken], deleteAccount);
 
 
-  app.post("/api/user/inGamePurchases", [authJwt.verifyToken], controller.Purchases);
-  app.post("/api/user/inGameSell", [authJwt.verifyToken], controller.Sell);
-  
-  app.post("/api/user/setWallet", [authJwt.verifyToken], controller.setWallet);
-  app.post("/api/user/removeWallet", [authJwt.verifyToken], controller.removeWallet);
+  app.post("/api/user/inGamePurchases", [verifyToken], Purchases);
+  app.post("/api/user/inGameSell", [verifyToken], Sell);
+
+  app.post("/api/user/setWallet", [verifyToken], setWallet);
+  app.post("/api/user/removeWallet", [verifyToken], removeWallet);
 
 
-  app.post("/api/user/rechargeBalance", [authJwt.verifyToken], controller.rechargeBalance);
-  app.post("/api/user/withdrawBalance", [authJwt.verifyToken], controller.withdrawBalance);
+
+  app.get("/api/user/getSubs", [verifyToken], getSubscription);
+  app.get("/api/user/getSubsById/:id/:userId", [verifyToken], getSubscriptionById);
+  app.get("/api/user/getAvaliableLevels/:id", [verifyToken], getAvaliableLevels);
+
+  app.post("/api/user/changeSubscription", [verifyToken], changeSubscription);
+  app.post("/api/user/changeAutoRenew", [verifyToken], changeAutoRenew);
+
+
+
+  app.post("/api/user/rechargeBalance", [verifyToken], rechargeBalance);
+  app.post("/api/user/canIWithdraw", [], canIWithdraw);
+  app.post("/api/user/withdrawBalance", [verifyToken], withdrawBalance);
 
 
   //Сервер вовы
-  app.post("/api/user/rechargeBalanceAPI", [authAPI.verifyApiKey], controller.rechargeBalance);
+  app.post("/api/user/rechargeBalanceAPI", [verifyApiKey], rechargeBalance);
 
-  app.post("/api/user/withdrawBalanceAPI", [authAPI.verifyApiKey], controller.withdrawBalance);
+  app.post("/api/user/withdrawBalanceAPI", [verifyApiKey], withdrawBalance);
 
 
   app.get(
     "/api/test/mod",
-    [authJwt.verifyToken, authJwt.isModerator],
-    controller.moderatorBoard
+    [verifyToken],
+    moderatorBoard
   );
 
   app.get(
     "/api/test/admin",
-    [authJwt.verifyToken, authJwt.isAdmin],
-    controller.adminBoard
+    [verifyToken],
+    adminBoard
   );
 };

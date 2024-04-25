@@ -1,3 +1,1 @@
-module.exports = {
-    root: process.env.IMAGE_ROOT
-};
+export const root = process.env.IMAGE_ROOT;

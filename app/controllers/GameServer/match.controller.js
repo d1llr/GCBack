@@ -1,10 +1,10 @@
-const db = require("../../models");
+import db from "../../models/index.js";
 const { matches: matches, user: users, levels: levels, activeTournaments: activeTournaments, tournamentsLevel: tournamentsLevel } = db;
-const Op = db.Sequelize.Op;
+const Op = db.sequelize.Op;
 
 
 
-exports.startMatch = async (req, res) => {
+export async function startMatch(req, res) {
     try {
         console.log('Trying to start pvp match');
         var tournament_participants = []
@@ -50,10 +50,10 @@ exports.startMatch = async (req, res) => {
     catch {
         res.status(500).send({ message: 'startMatch error!' });
     };
-};
+}
 
 // тут может быть баг с созданием, потому что нода ругается  TypeError: Cannot convert undefined or null to object
-exports.startSingleMatch = async (req, res) => {
+export async function startSingleMatch(req, res) {
     console.log(`Trying to start level ${req.body.level_name} in the ${req.body.game_name} by user ${req.body.player_id}`);
     try {
         // проверка на незаконченные уровни у пользователя, в случае если он ливнул, баланс все равно спишется после
@@ -100,7 +100,9 @@ exports.startSingleMatch = async (req, res) => {
                     player_ID: req.body.player_id,
                     game: req.body.game_name,
                     level_key: req.body.level_key,
-                    isWin: 0
+                    isWin: 0,
+                    end: false
+
                 }).then(() => {
                     res.status(200).send({ message: 'Level has been created!' });
                     return null
@@ -119,9 +121,9 @@ exports.startSingleMatch = async (req, res) => {
     catch {
         res.status(200).send({ message: 'Level has been created!' });
     };
-};
+}
 
-exports.startSingleTournamentMatch = async (req, res) => {
+export async function startSingleTournamentMatch(req, res) {
     console.log(`Trying to start tournament level ${req.body.level_name} in the ${req.body.game_name} by user ${req.body.player_id}`);
     try {
         console.log(req.body);
@@ -191,10 +193,10 @@ exports.startSingleTournamentMatch = async (req, res) => {
     catch {
         res.status(200).send({ message: 'Level has been created!' });
     };
-};
+}
 
 
-exports.getLastLevel = (req, res) => {
+export function getLastLevel(req, res) {
     try {
         console.log('Getting last level of the game [3 in row] {archived}');
         if (req.params['id'])
@@ -217,10 +219,10 @@ exports.getLastLevel = (req, res) => {
     catch {
         res.status(500).send({ message: 'Level error!' });
     };
-};
+}
 
 
-exports.getLastLevel_v2 = (req, res) => {
+export function getLastLevel_v2(req, res) {
     try {
         console.log(`Getting last level of the ${req.params['game_name']}`);
         if (req.params['id'] && req.params['game_name'])
@@ -243,9 +245,9 @@ exports.getLastLevel_v2 = (req, res) => {
     catch {
         res.status(500).send({ message: 'Level error!' });
     };
-};
+}
 
-exports.getLastLevelTournament = (req, res) => {
+export function getLastLevelTournament(req, res) {
     try {
         console.log(`Getting last level of the ${req.params['game_name']}`);
         console.log(req.params);
@@ -270,9 +272,9 @@ exports.getLastLevelTournament = (req, res) => {
     catch {
         res.status(500).send({ message: 'Level error!' });
     };
-};
+}
 
-exports.finishSingleMatch = (req, res) => {
+export function finishSingleMatch(req, res) {
     console.log(`Ending level ${req.body.level_key}`);
     try {
         levels.findOne({
@@ -331,10 +333,10 @@ exports.finishSingleMatch = (req, res) => {
     catch {
         res.status(507).send({ message: 'finishMatch error!' });
     };
-};
+}
 
 
-exports.finishSingleTournamentsMatch = (req, res) => {
+export function finishSingleTournamentsMatch(req, res) {
     console.log(`Ending level tournament ${req.body.level_key}`);
     try {
         tournamentsLevel.findOne({
@@ -393,10 +395,10 @@ exports.finishSingleTournamentsMatch = (req, res) => {
     catch {
         res.status(507).send({ message: 'finishMatch error!' });
     };
-};
+}
 
 
-exports.finishMatch = (req, res) => {
+export function finishMatch(req, res) {
     console.log(`Ending pvp round ${req.body.match_key}`);
     var players_count = 0;
     try {
@@ -471,6 +473,6 @@ exports.finishMatch = (req, res) => {
     catch {
         res.status(507).send({ message: 'finishMatch error!' });
     };
-};
+}
 
 

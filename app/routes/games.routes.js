@@ -1,7 +1,7 @@
-const { authJwt } = require("../middleware");
-const controller = require("../controllers/games.controller");
+import { verifyToken } from "../middleware/authJwt.js";
+import { getAll, getById } from "../controllers/games.controller.js";
 
-module.exports = function (app) {
+export default function Games(app) {
   app.use(function (req, res, next) {
     res.header(
       "Access-Control-Allow-Headers",
@@ -10,7 +10,7 @@ module.exports = function (app) {
     next();
   });
 
-  app.get("/api/games/all", [authJwt.verifyToken], controller.getAll);
+  app.get("/api/games/all", [verifyToken], getAll);
 
-  app.get("/api/games/:gameId", [authJwt.verifyToken], controller.getById);
+  app.get("/api/games/:gameId", [verifyToken], getById);
 };

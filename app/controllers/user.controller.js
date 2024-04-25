@@ -1,16 +1,36 @@
-const db = require("../models");
+
+import db from "../models/index.js";
 const { user: user } = db;
-const { matches: matches, levels: levels, purchases: purchases, activeTournaments: activeTournaments, games: games } = db;
-const bcrypt = require("bcryptjs");
+const {
+  matches: matches,
+  levels: levels,
+  purchases: purchases,
+  activeTournaments: activeTournaments,
+  games: games,
+  balance_histories: balance_histories,
+  Subscriptions: Subscriptions,
+  subscription_feautures: subscription_features,
+  Subscribe_limits: subscribe_limits,
+  subscription_change: subscription_change,
+} = db;
+
+const Op = db.sequelize.Op;
+
+
+import Sequelize from "sequelize";
+
+import hashSync from "bcryptjs";
+import compareSync from "bcryptjs";
 
 
 
-exports.getInfoById = (req, res) => {
+export function getInfoById(req, res) {
   try {
     user.findOne({
       where: {
         id: req.params["id"]
-      }
+      },
+      include: Subscriptions
     }).then(founded => {
       res.status(200).send(founded);
     })
@@ -18,8 +38,8 @@ exports.getInfoById = (req, res) => {
   catch {
     res.status(500).send({ message: 'gameId не существует' });
   };
-};
-exports.getUserName = (req, res) => {
+}
+export function getUserName(req, res) {
   try {
     user.findOne({
       where: {
@@ -32,10 +52,8 @@ exports.getUserName = (req, res) => {
   catch {
     res.status(500).send({ message: 'Username не существует' });
   };
-};
-
-
-exports.changePassword = (req, res) => {
+}
+export function changePassword(req, res) {
   console.log(req.body);
   try {
     user.findOne({
@@ -44,7 +62,7 @@ exports.changePassword = (req, res) => {
       }
     }).then(founded => {
       founded.update({
-        password: bcrypt.hashSync(req.body.password, 8)
+        password: hashSync(req.body.password, 8)
       })
       res.status(200).send({ message: 'Password updated successfully!' });
       return null
@@ -56,9 +74,9 @@ exports.changePassword = (req, res) => {
   catch {
     res.status(500).send({ message: 'Username не существует' });
   };
-};
+}
 
-exports.checkOldPassword = (req, res) => {
+export function checkOldPassword(req, res) {
   console.log(req.body);
   try {
     user.findOne({
@@ -66,7 +84,7 @@ exports.checkOldPassword = (req, res) => {
         email: req.body.email
       }
     }).then(founded => {
-      if (bcrypt.compareSync(req.body.OldPassword, founded.password))
+      if (compareSync(req.body.OldPassword, founded.password))
         res.status(200).send({ message: 'Old pass is true' });
       else {
         res.status(400).send({ message: 'Old pass is false' });
@@ -80,9 +98,9 @@ exports.checkOldPassword = (req, res) => {
   catch {
     res.status(500).send({ message: 'Username не существует' });
   };
-};
+}
 
-exports.changeEmail = (req, res) => {
+export function changeEmail(req, res) {
   console.log(req.body);
   try {
     user.findOne({
@@ -103,9 +121,9 @@ exports.changeEmail = (req, res) => {
   catch {
     res.status(500).send({ message: 'user не существует' });
   };
-};
+}
 
-exports.changeUserData = (req, res) => {
+export function changeUserData(req, res) {
   console.log(req.body);
   try {
     user.findOne({
@@ -127,10 +145,9 @@ exports.changeUserData = (req, res) => {
   catch {
     res.status(500).send({ message: 'UserData не существует' });
   };
-};
+}
 
-
-exports.deleteAccount = (req, res) => {
+export function deleteAccount(req, res) {
   console.log(req.body);
   try {
     user.destroy({
@@ -148,9 +165,9 @@ exports.deleteAccount = (req, res) => {
   catch {
     res.status(500).send({ message: 'user не существует' });
   };
-};
+}
 
-exports.Purchases = async (req, res) => {
+export async function Purchases(req, res) {
   try {
     const getTournamentPlayers = async () => {
       var tournament_key = []
@@ -203,9 +220,10 @@ exports.Purchases = async (req, res) => {
   catch {
     res.status(500).send({ message: 'Purchases error!' });
   };
-};
+}
 
-exports.Sell = async (req, res) => {
+
+export async function Sell(req, res) {
   try {
     if (Number(req.body.cost) > 0) {
       user.findOne({
@@ -222,6 +240,7 @@ exports.Sell = async (req, res) => {
             });
           });
 
+
       })
     }
     else {
@@ -233,7 +252,18 @@ exports.Sell = async (req, res) => {
   };
 };
 
-exports.getIdByToken = (req, res) => {
+      })
+    }
+    else {
+      res.status(498).send({ message: 'Purchases error!' });
+    }
+  }
+  catch {
+    res.status(500).send({ message: 'Purchases error!' });
+  };
+}
+
+export function getIdByToken(req, res) {
   try {
     user.findOne({
       where: {
@@ -246,32 +276,54 @@ exports.getIdByToken = (req, res) => {
   catch {
     res.status(500).send({ message: 'gameId не существует' });
   };
-};
+}
 
+export function getUserFee(req, res) {
+  try {
+    user.findOne({
+      where: {
+        wallet: req.params["wallet"]
+      },
+      include: [{
+        model: Subscriptions,
+        include: subscribe_limits
+      }]
+    }).then(founded => {
+      founded.subscriptions[0].subscribe_limits.map(item => {
+        if (item.name == 'Withdrawal fee')
+          res.status(200).json(item.subscription_features.value);
+      })
+    })
+  }
+  catch {
+    res.status(500).send({ message: 'gameId не существует' });
+  };
+}
 
-exports.getUserHistory = (req, res) => {
+export async function getUserHistory(req, res) {
   var arr = []
   var essence;
   const essenceArray = { 'matches': matches, 'levels': levels }
   try {
-    games.findAll({
+    await games.findAll({
       attributes: ['code', 'essence'],
       where: {
         active: true
       },
     }).then(async (founded) => {
-      await founded.forEach(game => {
+      await founded.forEach(async game => {
         if (req.body.game == game.code)
-          essence = essenceArray[game.essence]
-
+          essence = await essenceArray[game.essence]
       });
       await essence.findAll({
         where: {
           game: req.body.game,
         },
+        include: balance_histories,
         order: [['createdAt', "DESC"]],
       }).then(founded => {
         founded.map(match => {
+          console.log(match.id, ' : ', match.balance_history?.newBalance);
           if (match.player_IDs) {
             if (match.player_IDs?.split(',')?.includes(req.body.id.toString())) {
               arr.push({
@@ -288,7 +340,8 @@ exports.getUserHistory = (req, res) => {
                 title: match.level,
                 isWinner: match.isWin ? true : false,
                 match_cost: match.isWin ? match.win_cost : match.lose_cost,
-                createdAt: match.createdAt
+                createdAt: match.createdAt,
+                balance: match.balance_history?.newBalance
               })
             }
           }
@@ -310,9 +363,9 @@ exports.getUserHistory = (req, res) => {
   catch {
     res.status(500).send({ message: 'gameId не существует' });
   };
-};
+}
 
-exports.GetUserGamesCount = (req, res) => {
+export function GetUserGamesCount(req, res) {
   var essence;
   var arr = []
   const essenceArray = { 'matches': matches, 'levels': levels }
@@ -368,7 +421,7 @@ exports.GetUserGamesCount = (req, res) => {
   }
 }
 
-exports.setWallet = (req, res) => {
+export function setWallet(req, res) {
   // Save User to Database
   console.log(req.body);
   try {
@@ -377,21 +430,28 @@ exports.setWallet = (req, res) => {
         id: req.body.id
       }
     }).then(u => {
-      u.update({
-        wallet: req.body.wallet
-      })
-        .then(() => {
-          res.status(200).send('Wallet init success');
-
+      if (u.wallet == null) {
+        u.update({
+          wallet: req.body.wallet
         })
+          .then(() => {
+            res.status(200).send('Wallet init success');
+
+          })
+      } else if (u.wallet !== req.body.wallet) {
+        res.status(503).send({ message: 'Wallet already exist!' });
+      } else {
+        res.status(200).send({ message: 'Wallet init success' });
+      }
+
     })
   }
   catch {
     res.status(500).send({ message: 'Wallet error!' });
   };
-};
+}
 
-exports.removeWallet = (req, res) => {
+export function removeWallet(req, res) {
   // Save User to Database
   console.log(req.body);
   try {
@@ -412,11 +472,177 @@ exports.removeWallet = (req, res) => {
   catch {
     res.status(500).send({ message: 'Wallet error!' });
   };
-};
+}
 
+export function getSubscription(req, res) {
 
+  try {
+    Subscriptions.findAll({
+      include: [{
+        model: subscribe_limits,
+        through: {
+          attributes: ['text', 'value']
+        }
+      }]
+    }).then(subs => {
+      let arr = []
+      subs.map(item => {
+        // arr.push(item)
+        let badge;
+        let info = item.subscribe_limits.map(i => {
 
-exports.getBalance = (req, res) => {
+          if (i.name.includes('badge'))
+            badge = i.subscription_features.value
+          return i.subscription_features.text
+        })
+        const newData = {
+          "id": item.id,
+          "name": item.name,
+          "price": item.price,
+          "subscriptionId": item.subscriptionId,
+          "description": item.description,
+          'badge': badge,
+          "textinfo": info
+
+        };
+        arr.push(newData)
+      })
+      res.status(200).send(arr);
+    })
+
+  }
+  catch {
+    res.status(500).send({ message: 'Subscriptions getting error!' });
+  };
+}
+
+export function getSubscriptionById(req, res) {
+  try {
+    Subscriptions.findOne({
+      where: {
+        id: req.params["id"]
+      },
+      include: {
+        model: user,
+        where: {
+          id: req.params["userId"]
+        }
+      }
+    }).then(sub => {
+      console.log(sub.users[0].users_subscriptions);
+
+      setTimeout(() => {
+        res.status(200).send({
+          id: sub.id,
+          name: sub.name,
+          active_until: sub.users[0].users_subscriptions.expiration_date,
+          autorenewal: sub.users[0].users_subscriptions.autoRenewal,
+          status: sub.users[0].users_subscriptions.status
+        });
+      }, 1000);
+    })
+
+  }
+  catch {
+    res.status(500).send({ message: 'Subscriptions getting error!' });
+  };
+}
+
+export function getAvaliableLevels(req, res) {
+  try {
+    Subscriptions.findOne({
+      where: {
+        id: req.params["id"]
+      },
+      include: subscribe_limits
+    }).then(sub => {
+      sub.subscribe_limits.map(item => {
+        if (item.name == 'Level limit')
+          res.status(200).json(item.subscription_features.value);
+      })
+      // res.status(200).json({
+      //   id: sub.id,
+      //   name: sub.name,
+      //   active_until: sub.users[0].users_subscriptions.expiration_date,
+      //   autorenewal: sub.users[0].users_subscriptions.autoRenewal,
+      // });
+    })
+  }
+  catch {
+    res.status(500).send({ message: 'Subscriptions getting error!' });
+  };
+}
+
+export function changeSubscription(req, res) {
+  try {
+    user.findOne({
+      where: {
+        id: req.body.userId
+      },
+      include: Subscriptions
+    }).then(async user => {
+      const price = await Subscriptions.findOne({
+        where: {
+          id: req.body.newsubscribe
+        },
+        attributes: ['price']
+      })
+      const UserSubscription = user.subscriptions[0]
+      if (user.balance >= Number(price.price)) {
+        // костыль невиданных размеров, спрашивать только у @rmadidntwakeup
+
+        await db.users_subscriptions.update({
+          subscriptionId: req.body.newsubscribe,
+          expiration_date: new Date(new Date().setDate(new Date().getDate() + 30)),
+          autoRenewal: req.body.autorenewal,
+          status: true
+        }, {
+          where: {
+            userId: user.id
+          }
+        })
+        await user.subscriptions[0].users_subscriptions.update({
+          subscriptionId: req.body.newsubscribe,
+          expiration_date: new Date(new Date().setDate(new Date().getDate() + 30)),
+          autoRenewal: req.body.autorenewal,
+          status: true
+
+        })
+        await user.update({
+          balance: user.balance - Number(price.price)
+        })
+        setTimeout(() => {
+          res.status(200).send({ message: 'Subscription updated successfully' })
+        }, 1000);
+      } else {
+        res.status(404).send({ message: 'Not enough money' });
+      }
+    }
+    )
+  }
+  catch {
+    res.status(500).send({ message: 'custom error' });
+  };
+}
+
+export function changeAutoRenew(req, res) {
+  try {
+    db.users_subscriptions.update({
+      autoRenewal: req.body.autorenewal,
+      status: req.body.autorenewal
+    }, {
+      where: {
+        userId: req.body.userId
+      }
+    })
+    res.status(200).send({ message: 'Subscription updated successfully' })
+  }
+  catch {
+    res.status(500).send({ message: 'custom error' });
+  };
+}
+
+export function getBalance(req, res) {
   try {
     user.findOne({
       where: {
@@ -434,10 +660,9 @@ exports.getBalance = (req, res) => {
   catch {
     res.status(500).send({ message: 'gameId не существует' });
   };
-};
+}
 
-
-exports.rechargeBalance = (req, res) => {
+export function rechargeBalance(req, res) {
   // Save User to Database
   console.log(req.body);
   try {
@@ -462,11 +687,63 @@ exports.rechargeBalance = (req, res) => {
   catch {
     res.status(500).send({ message: 'Balance error!' });
   };
-};
+}
 
+export function canIWithdraw(req, res) {
+  // Save User to Database\
+  console.log(req.body);
+  try {
+    user.findOne({
+      where: {
+        id: req.body.id
+      },
+      include: [{
+        model: db.deal_history,
+        required: false,
+        where: {
+          type: 'withdrawal',
+          createdAt: {
+            [Op.lt]: new Date(),
+            [Op.gt]: new Date(new Date() - 24 * 60 * 60 * 1000)
+          }
+        }
+      }, {
+        model: Subscriptions,
+        include: subscribe_limits
+      }]
+    }).then(u => {
+      console.log('user', u);
+      let subsWithdrawalLimit = 0
+      let commision = 0
+      let availableBalanceToWithdraw = 0;
+      u.subscriptions[0].subscribe_limits.map(item => {
+        if (item.name == 'Daily withdrawal limit') {
+          subsWithdrawalLimit = item.subscription_features.value;
+        }
+        if (item.name == 'Withdrawal fee') {
+          commision = item.subscription_features.value;
+        }
+      });
+      u.deal_histories.map(item => {
+        availableBalanceToWithdraw += item.oldBalance - item.newBalance
+      });
+      setTimeout(() => {
+        res.status(200).send({
+          AvailableToWithdraw: subsWithdrawalLimit - availableBalanceToWithdraw,
+          commision: commision
+        })
 
+      }, 1000);
+    }).catch(err => {
+      console.log(err);
+    })
+  }
+  catch {
+    res.status(500).send({ message: 'Balance error!' });
+  };
+}
 
-exports.withdrawBalance = (req, res) => {
+export function withdrawBalance(req, res) {
   // Save User to Database
   console.log('trying to withdraw');
   console.log(req.body);
@@ -494,17 +771,17 @@ exports.withdrawBalance = (req, res) => {
   catch {
     res.status(500).send({ message: 'Balance error!' });
   };
-};
+}
 
-
-exports.userBoard = (req, res) => {
+export function userBoard(req, res) {
   res.status(200).send("User Content.");
-};
+}
 
-exports.adminBoard = (req, res) => {
+export function adminBoard(req, res) {
   res.status(200).send("Admin Content.");
-};
+}
 
-exports.moderatorBoard = (req, res) => {
+export function moderatorBoard(req, res) {
   res.status(200).send("Moderator Content.");
-};
+}
+

@@ -1,5 +1,4 @@
-const nodemailer = require("nodemailer");
-
+import nodemailer from 'nodemailer'
 
 
 const transporter = nodemailer.createTransport({
@@ -14,7 +13,7 @@ const transporter = nodemailer.createTransport({
 });
 
 
-const sendEmail = async (to, subject, text) => {
+export const sendEmail = async (to, subject, text) => {
     await transporter.sendMail({
         from: '<no-reply@pacgc.pw>', // sender address
         to: to, // list of receivers
@@ -26,9 +25,4 @@ const sendEmail = async (to, subject, text) => {
     }).catch(err => {
         console.log(err);
     })
-}
-
-
-module.exports = {
-    sendEmail
 }

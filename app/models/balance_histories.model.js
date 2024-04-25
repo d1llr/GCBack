@@ -1,26 +1,26 @@
 export default (sequelize, Sequelize) => {
-    const Purchases = sequelize.define("purchases", {
+    const balance_histories = sequelize.define("balance_histories", {
       id: {
-        type: Sequelize.STRING,
+        type: Sequelize.INTEGER,
         primaryKey: true
       },
       user_id: {
         type: Sequelize.INTEGER
       },
+      newBalance: {
+        type: Sequelize.INTEGER
+      },
+      oldBalance: {
+        type:Sequelize.INTEGER
+      },
+      type: {
+        type: Sequelize.STRING
+      },
       game: {
         type: Sequelize.STRING
       },
-      cost: {
-        type: Sequelize.INTEGER
-      },
-      product: {
-        type: Sequelize.STRING
-      },
-      tournament_key:{
-        type: Sequelize.STRING
-      }
     });
   
-    return Purchases;
+    return balance_histories;
   };
   
