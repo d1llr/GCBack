@@ -10,5 +10,5 @@ module.exports = function (app) {
     next();
   });
 
-  app.get("/api/time/getCurrentDay", [authJwt.verifyToken], controller.getCurrentDay);
+  app.get("/api/time/getCurrentDay", controller.getCurrentDay);
 };

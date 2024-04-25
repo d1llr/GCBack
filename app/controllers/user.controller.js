@@ -205,6 +205,33 @@ exports.Purchases = async (req, res) => {
   };
 };
 
+exports.Sell = async (req, res) => {
+  try {
+    if (Number(req.body.cost) > 0) {
+      user.findOne({
+        where: {
+          id: req.body.user_id
+        }
+      }).then(u => {
+        u.update({
+          balance: u.balance + Number(req.body.cost)
+        })
+          .then(() => {
+            res.status(200).json({
+              balance: Number(u.balance)
+            });
+          });
+
+      })
+    }
+    else {
+      res.status(498).send({ message: 'Purchases error!' });
+    }
+  }
+  catch {
+    res.status(500).send({ message: 'Purchases error!' });
+  };
+};
 
 exports.getIdByToken = (req, res) => {
   try {

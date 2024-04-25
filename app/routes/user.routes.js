@@ -26,6 +26,8 @@ module.exports = function (app) {
 
 
   app.post("/api/user/inGamePurchases", [authJwt.verifyToken], controller.Purchases);
+  app.post("/api/user/inGameSell", [authJwt.verifyToken], controller.Sell);
+  
   app.post("/api/user/setWallet", [authJwt.verifyToken], controller.setWallet);
   app.post("/api/user/removeWallet", [authJwt.verifyToken], controller.removeWallet);
 
