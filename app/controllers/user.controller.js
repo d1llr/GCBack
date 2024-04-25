@@ -252,16 +252,6 @@ export async function Sell(req, res) {
   };
 };
 
-      })
-    }
-    else {
-      res.status(498).send({ message: 'Purchases error!' });
-    }
-  }
-  catch {
-    res.status(500).send({ message: 'Purchases error!' });
-  };
-}
 
 export function getIdByToken(req, res) {
   try {
