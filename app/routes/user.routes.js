@@ -56,6 +56,7 @@ export default function User(app) {
   app.post("/api/user/changeAutoRenew", [verifyToken], changeAutoRenew);
 
 
+
   app.post("/api/user/rechargeBalance", [verifyToken], rechargeBalance);
   app.post("/api/user/canIWithdraw", [], canIWithdraw);
   app.post("/api/user/withdrawBalance", [verifyToken], withdrawBalance);

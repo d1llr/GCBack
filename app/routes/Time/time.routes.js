@@ -10,5 +10,5 @@ export default function TimeRoutes (app) {
     next();
   });
 
-  app.get("/api/time/getCurrentDay", [verifyToken], getCurrentDay);
+  app.get("/api/time/getCurrentDay", controller.getCurrentDay);
 };

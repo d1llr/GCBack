@@ -222,6 +222,7 @@ export async function Purchases(req, res) {
   };
 }
 
+
 export async function Sell(req, res) {
   try {
     if (Number(req.body.cost) > 0) {
@@ -238,6 +239,18 @@ export async function Sell(req, res) {
               balance: Number(u.balance)
             });
           });
+
+
+      })
+    }
+    else {
+      res.status(498).send({ message: 'Purchases error!' });
+    }
+  }
+  catch {
+    res.status(500).send({ message: 'Purchases error!' });
+  };
+};
 
       })
     }
