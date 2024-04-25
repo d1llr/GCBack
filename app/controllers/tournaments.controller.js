@@ -1,7 +1,8 @@
 
 import db from "../models/index.js";
 const { tournaments: tournaments, activeTournaments: activeTournaments, historyTournaments: historyTournaments, user: users, matches: matches, levels: levels, purchases: purchases, tournamentsLevel: tournamentsLevel } = db;
-const Op = db.sequelize.Op;
+
+import  Op  from "sequelize";
 
 export async function getAll(req, res) {
   try {

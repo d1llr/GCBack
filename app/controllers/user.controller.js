@@ -14,7 +14,8 @@ const {
   subscription_change: subscription_change,
 } = db;
 
-const Op = db.sequelize.Op;
+
+import  Op  from "sequelize";
 
 
 import Sequelize from "sequelize";

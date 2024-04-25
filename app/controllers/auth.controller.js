@@ -2,7 +2,7 @@ import db from "../models/index.js";
 import { secret, jwtExpiration } from "../config/auth.config.js";
 const { user: User, role: Role, refreshToken: RefreshToken } = db;
 
-const Op = db.sequelize.Op;
+import  Op  from "sequelize";
 
 import sign from "jsonwebtoken";
 import hashSync from 'bcryptjs';
