@@ -1,6 +1,24 @@
-const db = require("../models");
+
+const db = require("../models").default;
 const { user: user } = db;
-const { matches: matches, levels: levels, purchases: purchases, activeTournaments: activeTournaments, games: games, balance_histories: balance_histories } = db;
+const {
+  matches: matches,
+  levels: levels,
+  purchases: purchases,
+  activeTournaments: activeTournaments,
+  games: games,
+  balance_histories: balance_histories,
+  Subscriptions: Subscriptions,
+  subscription_feautures: subscription_features,
+  Subscribe_limits: subscribe_limits,
+  subscription_change: subscription_change,
+} = db;
+
+const Op = db.Sequelize.Op;
+
+
+const Sequelize = require("sequelize");
+
 const bcrypt = require("bcryptjs");
 
 
@@ -10,7 +28,8 @@ exports.getInfoById = (req, res) => {
     user.findOne({
       where: {
         id: req.params["id"]
-      }
+      },
+      include: Subscriptions
     }).then(founded => {
       res.status(200).send(founded);
     })
@@ -127,7 +146,6 @@ exports.changeUserData = (req, res) => {
   };
 };
 
-
 exports.deleteAccount = (req, res) => {
   console.log(req.body);
   try {
@@ -203,6 +221,33 @@ exports.Purchases = async (req, res) => {
   };
 };
 
+exports.Sell = async (req, res) => {
+  try {
+    if (Number(req.body.cost) > 0) {
+      user.findOne({
+        where: {
+          id: req.body.user_id
+        }
+      }).then(u => {
+        u.update({
+          balance: u.balance + Number(req.body.cost)
+        })
+          .then(() => {
+            res.status(200).json({
+              balance: Number(u.balance)
+            });
+          });
+
+      })
+    }
+    else {
+      res.status(498).send({ message: 'Purchases error!' });
+    }
+  }
+  catch {
+    res.status(500).send({ message: 'Purchases error!' });
+  };
+};
 
 exports.getIdByToken = (req, res) => {
   try {
@@ -219,6 +264,27 @@ exports.getIdByToken = (req, res) => {
   };
 };
 
+exports.getUserFee = (req, res) => {
+  try {
+    user.findOne({
+      where: {
+        wallet: req.params["wallet"]
+      },
+      include: [{
+        model: Subscriptions,
+        include: subscribe_limits
+      }]
+    }).then(founded => {
+      founded.subscriptions[0].subscribe_limits.map(item => {
+        if (item.name == 'Withdrawal fee')
+          res.status(200).json(item.subscription_features.value);
+      })
+    })
+  }
+  catch {
+    res.status(500).send({ message: 'gameId не существует' });
+  };
+};
 
 exports.getUserHistory = async (req, res) => {
   var arr = []
@@ -394,7 +460,173 @@ exports.removeWallet = (req, res) => {
   };
 };
 
+exports.getSubscription = (req, res) => {
 
+  try {
+    Subscriptions.findAll({
+      include: [{
+        model: subscribe_limits,
+        through: {
+          attributes: ['text', 'value']
+        }
+      }]
+    }).then(subs => {
+      let arr = []
+      subs.map(item => {
+        // arr.push(item)
+        let badge;
+        let info = item.subscribe_limits.map(i => {
+
+          if (i.name.includes('badge'))
+            badge = i.subscription_features.value
+          return i.subscription_features.text
+        })
+        const newData = {
+          "id": item.id,
+          "name": item.name,
+          "price": item.price,
+          "subscriptionId": item.subscriptionId,
+          "description": item.description,
+          'badge': badge,
+          "textinfo": info
+
+        };
+        arr.push(newData)
+      })
+      res.status(200).send(arr);
+    })
+
+  }
+  catch {
+    res.status(500).send({ message: 'Subscriptions getting error!' });
+  };
+};
+
+exports.getSubscriptionById = (req, res) => {
+  try {
+    Subscriptions.findOne({
+      where: {
+        id: req.params["id"]
+      },
+      include: {
+        model: user,
+        where: {
+          id: req.params["userId"]
+        }
+      }
+    }).then(sub => {
+      console.log(sub.users[0].users_subscriptions);
+
+      setTimeout(() => {
+        res.status(200).send({
+          id: sub.id,
+          name: sub.name,
+          active_until: sub.users[0].users_subscriptions.expiration_date,
+          autorenewal: sub.users[0].users_subscriptions.autoRenewal,
+          status: sub.users[0].users_subscriptions.status
+        });
+      }, 1000);
+    })
+
+  }
+  catch {
+    res.status(500).send({ message: 'Subscriptions getting error!' });
+  };
+};
+
+exports.getAvaliableLevels = (req, res) => {
+  try {
+    Subscriptions.findOne({
+      where: {
+        id: req.params["id"]
+      },
+      include: subscribe_limits
+    }).then(sub => {
+      sub.subscribe_limits.map(item => {
+        if (item.name == 'Level limit')
+          res.status(200).json(item.subscription_features.value);
+      })
+      // res.status(200).json({
+      //   id: sub.id,
+      //   name: sub.name,
+      //   active_until: sub.users[0].users_subscriptions.expiration_date,
+      //   autorenewal: sub.users[0].users_subscriptions.autoRenewal,
+      // });
+    })
+  }
+  catch {
+    res.status(500).send({ message: 'Subscriptions getting error!' });
+  };
+};
+
+exports.changeSubscription = (req, res) => {
+  try {
+    user.findOne({
+      where: {
+        id: req.body.userId
+      },
+      include: Subscriptions
+    }).then(async user => {
+      const price = await Subscriptions.findOne({
+        where: {
+          id: req.body.newsubscribe
+        },
+        attributes: ['price']
+      })
+      const UserSubscription = user.subscriptions[0]
+      if (user.balance >= Number(price.price)) {
+        // костыль невиданных размеров, спрашивать только у @rmadidntwakeup
+
+        await db.users_subscriptions.update({
+          subscriptionId: req.body.newsubscribe,
+          expiration_date: new Date(new Date().setDate(new Date().getDate() + 30)),
+          autoRenewal: req.body.autorenewal,
+          status: true
+        }, {
+          where: {
+            userId: user.id
+          }
+        })
+        await user.subscriptions[0].users_subscriptions.update({
+          subscriptionId: req.body.newsubscribe,
+          expiration_date: new Date(new Date().setDate(new Date().getDate() + 30)),
+          autoRenewal: req.body.autorenewal,
+          status: true
+
+        })
+        await user.update({
+          balance: user.balance - Number(price.price)
+        })
+        setTimeout(() => {
+          res.status(200).send({ message: 'Subscription updated successfully' })
+        }, 1000);
+      } else {
+        res.status(404).send({ message: 'Not enough money' });
+      }
+    }
+    )
+  }
+  catch {
+    res.status(500).send({ message: 'custom error' });
+  };
+};
+
+exports.changeAutoRenew = (req, res) => {
+  try {
+    db.users_subscriptions.update({
+      autoRenewal: req.body.autorenewal,
+      status: req.body.autorenewal
+    }, {
+      where: {
+        userId: req.body.userId
+      }
+    })
+    res.status(200).send({ message: 'Subscription updated successfully' })
+  }
+  catch {
+    res.status(500).send({ message: 'custom error' });
+  };
+};
 
 exports.getBalance = (req, res) => {
   try {
@@ -415,7 +647,6 @@ exports.getBalance = (req, res) => {
     res.status(500).send({ message: 'gameId не существует' });
   };
 };
-
 
 exports.rechargeBalance = (req, res) => {
   // Save User to Database
@@ -444,7 +675,59 @@ exports.rechargeBalance = (req, res) => {
   };
 };
 
+exports.canIWithdraw = (req, res) => {
+  // Save User to Database\
+  console.log(req.body);
+  try {
+    user.findOne({
+      where: {
+        id: req.body.id
+      },
+      include: [{
+        model: db.deal_history,
+        required: false,
+        where: {
+          type: 'withdrawal',
+          createdAt: {
+            [Op.lt]: new Date(),
+            [Op.gt]: new Date(new Date() - 24 * 60 * 60 * 1000)
+          }
+        }
+      }, {
+        model: Subscriptions,
+        include: subscribe_limits
+      }]
+    }).then(u => {
+      console.log('user', u);
+      let subsWithdrawalLimit = 0
+      let commision = 0
+      let availableBalanceToWithdraw = 0;
+      u.subscriptions[0].subscribe_limits.map(item => {
+        if (item.name == 'Daily withdrawal limit') {
+          subsWithdrawalLimit = item.subscription_features.value;
+        }
+        if (item.name == 'Withdrawal fee') {
+          commision = item.subscription_features.value;
+        }
+      });
+      u.deal_histories.map(item => {
+        availableBalanceToWithdraw += item.oldBalance - item.newBalance
+      });
+      setTimeout(() => {
+        res.status(200).send({
+          AvailableToWithdraw: subsWithdrawalLimit - availableBalanceToWithdraw,
+          commision: commision
+        })
 
+      }, 1000);
+    }).catch(err => {
+      console.log(err);
+    })
+  }
+  catch {
+    res.status(500).send({ message: 'Balance error!' });
+  };
+};
 
 exports.withdrawBalance = (req, res) => {
   // Save User to Database
@@ -476,7 +759,6 @@ exports.withdrawBalance = (req, res) => {
   };
 };
 
-
 exports.userBoard = (req, res) => {
   res.status(200).send("User Content.");
 };
@@ -488,3 +770,4 @@ exports.adminBoard = (req, res) => {
 exports.moderatorBoard = (req, res) => {
   res.status(200).send("Moderator Content.");
 };
+

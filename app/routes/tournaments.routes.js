@@ -1,7 +1,7 @@
-const { authJwt } = require("../middleware");
-const controller = require("../controllers/tournaments.controller");
+import {verifyToken} from '../middleware'
+import { getAll, getTournamentsByFilters, getFilters, GetTournamentsCount, getAllByGame, getAllActiveAndHistoryTournaments, getHistory, getById, getTournamentMapById, getByIdFromHistory, getParticipate, getRating } from "../controllers/tournaments.controller";
 
-module.exports = function (app) {
+export default function (app) {
   app.use(function (req, res, next) {
     res.header(
       "Access-Control-Allow-Headers",
@@ -12,31 +12,31 @@ module.exports = function (app) {
 
 
   // GC tournaments page
-  app.post("/api/tournaments/all", [authJwt.verifyToken], controller.getAll);
+  app.post("/api/tournaments/all", [verifyToken], getAll);
 
-  app.post("/api/tournaments/getTournamentsByFilters", [authJwt.verifyToken], controller.getTournamentsByFilters);
+  app.post("/api/tournaments/getTournamentsByFilters", [verifyToken], getTournamentsByFilters);
 
   //game tournaments
-  app.get("/api/tournaments/getFilters", [authJwt.verifyToken], controller.getFilters);
-  app.get("/api/tournaments/GetTournamentsCount", [authJwt.verifyToken], controller.GetTournamentsCount);
+  app.get("/api/tournaments/getFilters", [verifyToken], getFilters);
+  app.get("/api/tournaments/GetTournamentsCount", [verifyToken], GetTournamentsCount);
 
-  app.get("/api/tournaments/:game/all", [authJwt.verifyToken], controller.getAllByGame);
-
-
-  app.get("/api/tournaments/activeAndHistory/all/:game", [authJwt.verifyToken], controller.getAllActiveAndHistoryTournaments);
+  app.get("/api/tournaments/:game/all", [verifyToken], getAllByGame);
 
 
-  app.get("/api/tournaments/history", [authJwt.verifyToken], controller.getHistory);
+  app.get("/api/tournaments/activeAndHistory/all/:game", [verifyToken], getAllActiveAndHistoryTournaments);
 
-  app.get("/api/tournaments/:tournamentId", [authJwt.verifyToken], controller.getById);
 
-  app.get("/api/tournaments/:tournament_key/map", [authJwt.verifyToken], controller.getTournamentMapById);
+  app.get("/api/tournaments/history", [verifyToken], getHistory);
 
-  app.get("/api/tournaments/history/:tournamentId", [authJwt.verifyToken], controller.getByIdFromHistory);
+  app.get("/api/tournaments/:tournamentId", [verifyToken], getById);
 
-  app.post("/api/tournaments/getParticipate", [authJwt.verifyToken], controller.getParticipate);
+  app.get("/api/tournaments/:tournament_key/map", [verifyToken], getTournamentMapById);
 
-  app.post("/api/tournaments/getRating", [authJwt.verifyToken], controller.getRating);
+  app.get("/api/tournaments/history/:tournamentId", [verifyToken], getByIdFromHistory);
+
+  app.post("/api/tournaments/getParticipate", [verifyToken], getParticipate);
+
+  app.post("/api/tournaments/getRating", [verifyToken], getRating);
 
 
 };

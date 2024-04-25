@@ -1,4 +1,4 @@
-const db = require("../models");
+const db = require("../models").default;
 const { games: games } = db;
 const fs = require('fs');
 

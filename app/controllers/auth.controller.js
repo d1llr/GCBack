@@ -1,4 +1,4 @@
-const db = require("../models");
+const db = require("../models").default;
 const config = require("../config/auth.config");
 const { user: User, role: Role, refreshToken: RefreshToken } = db;
 
@@ -7,7 +7,7 @@ const Op = db.Sequelize.Op;
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { sendEmail } = require("../utils/mail");
-const { setCode, getCode } = require("../utils/redis");
+const { setCode, getCode } = require("../utils/redis").default;
 
 exports.signup = (req, res) => {
   // Save User to Database
@@ -96,7 +96,8 @@ exports.signin = (req, res) => {
   User.findOne({
     where: {
       [Op.or]: [{ username: req.body.username.trim() }, { email: req.body.username.trim() }]
-    }
+    },
+    include: db.Subscriptions
   })
     .then(async (user) => {
       if (!user) {
@@ -136,6 +137,7 @@ exports.signin = (req, res) => {
           balance: user.balance,
           accessToken: token,
           refreshToken: refreshToken,
+          subscribe: user.subscriptions[0].id
         });
 
       });

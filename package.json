@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Node.js Demo for JWT Authentication",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "export NODE_ENV=production && nodemon server.js",

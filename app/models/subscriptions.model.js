@@ -1,27 +1,21 @@
-module.exports = (sequelize, Sequelize) => {
-  const Subscriptions = sequelize.define("subscriptions", {
-    username: {
-      type: Sequelize.STRING
-    },
-    name: {
-      type: Sequelize.STRING
-    },
-    email: {
-      type: Sequelize.STRING
-    },
-    password: {
-      type: Sequelize.STRING
-    },
-    wallet: {
-      type: Sequelize.STRING
-    },
-    balance: {
-      type: Sequelize.INTEGER
-    },
-    subscription: {
-      type: Sequelize.INTEGER
-    },
-  });
 
-  return Subscriptions;
-};
+export default Subscriptions = sequelize.define("subscription", {
+  id: {
+    type: Sequelize.INTEGER,
+    primaryKey: true
+  },
+  name: {
+    type: Sequelize.STRING
+  },
+  price: {
+    type: Sequelize.INTEGER
+  },
+  subscriptionId: {
+    type: Sequelize.INTEGER
+  },
+  description: {
+    type: Sequelize.STRING
+  }
+}, {
+  timestamps: false
+})

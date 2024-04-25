@@ -1,9 +1,14 @@
-const authAPI = require("./authAPI");
-const authJwt = require("./authJwt");
-const verifySignUp = require("./verifySignUp");
+import { verifyApiKey } from "./authAPI.js";
+import { catchError, verifyToken } from "./authJwt.js";
+import { checkDuplicateEmail, checkDuplicateUsername, checkRolesExisted } from "./verifySignUp.js";
+import { checkExpiredSubscription } from "./SubscriptionExpiration.js";
 
-module.exports = {
-  authJwt,
-  verifySignUp,
-  authAPI
+export default {
+  verifyApiKey,
+  catchError,
+  verifyToken,
+  checkDuplicateEmail,
+  checkDuplicateUsername, 
+  checkRolesExisted,
+  checkExpiredSubscription
 };

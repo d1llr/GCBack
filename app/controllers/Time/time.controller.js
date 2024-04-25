@@ -18,6 +18,15 @@ exports.getCurrentDay = (req, res) => {
         res.status(500).send({ message: err.message });
     };
 };
+exports.getCurrentSupply = (req, res) => {
+    try {
+        let a=36157623
+        res.status(200).json(a);
+    }
+    catch {
+        res.status(500).send({ message: 'error' });
+    };
+};
 
 
 

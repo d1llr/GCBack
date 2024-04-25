@@ -1,5 +1,5 @@
 const { authJwt } = require("../../middleware").default;
-const controller = require("../../controllers/GameServer/games.gs.controller");
+const controller = require("../../controllers/Time/time.controller.js");
 
 module.exports = function (app) {
   app.use(function (req, res, next) {
@@ -10,7 +10,5 @@ module.exports = function (app) {
     next();
   });
 
-  app.get("/api/GS/game/checkVersion/:name", controller.checkVersion);
-  
-
+  app.get("/api/getCurrentSupply", [], controller.getCurrentSupply);
 };

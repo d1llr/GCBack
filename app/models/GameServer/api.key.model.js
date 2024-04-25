@@ -1,4 +1,4 @@
-module.exports = (sequelize, Sequelize) => {
+export default (sequelize, Sequelize) => {
     const api_key = sequelize.define("api_key", {
         server: {
             type: Sequelize.STRING

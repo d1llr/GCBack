@@ -1,7 +1,7 @@
-const { verifySignUp, authJwt } = require("../middleware");
-const controller = require("../controllers/auth.controller");
+import { checkDuplicateUsername, checkDuplicateEmail, checkRolesExisted, checkExpiredSubscription } from "../middleware/index.js";
+import { signup, sendCode, checkCode, signin, refreshToken } from "../controllers/auth.controller.js";
 
-module.exports = function (app) {
+export default function (app) {
   app.use(function (req, res, next) {
     res.header(
       "Access-Control-Allow-Headers",
@@ -13,36 +13,36 @@ module.exports = function (app) {
   app.post(
     "/api/auth/signup",
     [
-      verifySignUp.checkDuplicateUsername,
-      verifySignUp.checkDuplicateEmail,
-      verifySignUp.checkRolesExisted
+      checkDuplicateUsername,
+      checkDuplicateEmail,
+      checkRolesExisted
     ],
-    controller.signup
+    signup
   );
   app.post(
     "/api/auth/sendCodeUponRegister",
     [
-      verifySignUp.checkDuplicateEmail,
-      verifySignUp.checkDuplicateUsername,
-      verifySignUp.checkRolesExisted
+      checkDuplicateEmail,
+      checkDuplicateUsername,
+      checkRolesExisted
     ],
-    controller.sendCode
+    sendCode
   );
   app.post(
     "/api/auth/SendCodeWithEmailValidation",
     [
-      verifySignUp.checkDuplicateEmail,
+      checkDuplicateEmail,
     ],
-    controller.sendCode
+    sendCode
   );
-  app.post("/api/auth/sendCode", [], controller.sendCode);
+  app.post("/api/auth/sendCode", [], sendCode);
 
   app.post(
     "/api/auth/checkCode",
-    controller.checkCode
+    checkCode
   );
 
-  app.post("/api/auth/signin", controller.signin);
+  app.post("/api/auth/signin", signin);
 
-  app.post("/api/auth/refreshtoken", controller.refreshToken);
+  app.post("/api/auth/refreshtoken", [checkExpiredSubscription], refreshToken);
 };

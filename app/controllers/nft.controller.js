@@ -1,4 +1,4 @@
-const db = require("../models");
+const db = require("../models").default;
 const { nft: nft } = db;
 
 exports.getAll = (req, res) => {

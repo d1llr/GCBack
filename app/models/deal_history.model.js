@@ -1,8 +1,9 @@
-export default (sequelize, Sequelize) => {
-    const balance_histories = sequelize.define("balance_histories", {
+module.exports = (sequelize, Sequelize) => {
+    const deal_history = sequelize.define("deal_history", {
       id: {
         type: Sequelize.INTEGER,
-        primaryKey: true
+        primaryKey: true,
+        autoIncrement: true,
       },
       user_id: {
         type: Sequelize.INTEGER
@@ -15,12 +16,9 @@ export default (sequelize, Sequelize) => {
       },
       type: {
         type: Sequelize.STRING
-      },
-      game: {
-        type: Sequelize.STRING
-      },
+      }
     });
   
-    return balance_histories;
+    return deal_history;
   };
   

@@ -1,4 +1,4 @@
-const db = require("../../models");
+const db = require("../../models").default;
 const { matches: matches, user: users, levels: levels, activeTournaments: activeTournaments, tournamentsLevel: tournamentsLevel } = db;
 const Op = db.Sequelize.Op;
 
@@ -101,7 +101,7 @@ exports.startSingleMatch = async (req, res) => {
                     game: req.body.game_name,
                     level_key: req.body.level_key,
                     isWin: 0,
-                    end:false
+                    end: false
 
                 }).then(() => {
                     res.status(200).send({ message: 'Level has been created!' });
