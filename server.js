@@ -1,13 +1,11 @@
 import { Wallet, constants as _constants, utils, providers } from "ethers";
 import express, { json, urlencoded } from "express";
 import cors from "cors";
+
+
 import db from "./app/models/index.js";
-// require("dotenv").config({ path: `.env.${process.env.NODE_ENV.trim()}` });
 const app = express();
 
-import { schedule } from "node-cron";
-import { randomBytes } from "node:crypto";
-import { log } from "node:console";
 // const { WebSocketInit, wsSend } = require("./websocketserver");
 
 // const WebSocket = require("ws");
@@ -118,7 +116,7 @@ OtherRoutes(app)
 
 
 // set port, listen for requests
-const PORT = process.env.PORT || 9090;
+const PORT = process.env.EXPRESS_PORT || 9091;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}. | ${process.env.NODE_ENV} |`);
 });

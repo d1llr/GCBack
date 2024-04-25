@@ -1,3 +1,6 @@
+import dotenv from 'dotenv'
+dotenv.config({ path: `.env.${process.env.NODE_ENV.trim()}` })
+
 export const HOST = process.env.DB_HOST;
 export const USER = process.env.DB_USER;
 export const PASSWORD = process.env.DB_PASSWORD;
