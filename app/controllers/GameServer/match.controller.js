@@ -1,6 +1,8 @@
 import db from "../../models/index.js";
 const { matches: matches, user: users, levels: levels, activeTournaments: activeTournaments, tournamentsLevel: tournamentsLevel } = db;
-const Op = db.sequelize.Op;
+
+import Sequelize from "sequelize";
+const Op = Sequelize.Op
 
 
 

@@ -1,7 +1,9 @@
 
 import db from "../models/index.js";
 const { tournaments: tournaments, activeTournaments: activeTournaments, historyTournaments: historyTournaments, user: users, matches: matches, levels: levels, purchases: purchases, tournamentsLevel: tournamentsLevel } = db;
-const Op = db.sequelize.Op;
+
+import Sequelize from "sequelize";
+const Op = Sequelize.Op
 
 export async function getAll(req, res) {
   try {
@@ -32,8 +34,6 @@ export async function getTournamentsByFilters(req, res) {
       history = tournament
     });
 
-    Object.values(req.body).map()
-    console.log(active);
     await res.status(200).json({ active: active, history: history });
   }
   catch {

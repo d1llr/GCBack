@@ -12,15 +12,24 @@ const {
   subscription_feautures: subscription_features,
   Subscribe_limits: subscribe_limits,
   subscription_change: subscription_change,
+  deal_history: deal_history
 } = db;
 
-const Op = db.sequelize.Op;
-
-
 import Sequelize from "sequelize";
+const Op = Sequelize.Op
+import axios from 'axios'
+import * as https from "https";
+const httpsAgent = new https.Agent({
+  rejectUnauthorized: false,
+});
 
-import hashSync from "bcryptjs";
-import compareSync from "bcryptjs";
+import pkgs from "jsonwebtoken";
+const { sign } = pkgs
+
+import pkg from 'bcryptjs';
+import { wssSend } from "../utils/wss.js";
+import { rejects } from "assert";
+const { compareSync, hashSync } = pkg;
 
 
 
@@ -252,7 +261,6 @@ export async function Sell(req, res) {
   };
 };
 
-
 export function getIdByToken(req, res) {
   try {
     user.findOne({
@@ -261,6 +269,9 @@ export function getIdByToken(req, res) {
       }
     }).then(founded => {
       res.status(200).json(founded.id);
+    }).catch(() => {
+      res.status(404).send({ message: "User not found" });
+
     })
   }
   catch {
@@ -283,6 +294,8 @@ export function getUserFee(req, res) {
         if (item.name == 'Withdrawal fee')
           res.status(200).json(item.subscription_features.value);
       })
+    }).catch(() => {
+      res.status(404).send({ message: "User not found" });
     })
   }
   catch {
@@ -519,15 +532,12 @@ export function getSubscriptionById(req, res) {
         }
       }
     }).then(sub => {
-      console.log(sub.users[0].users_subscriptions);
-
       setTimeout(() => {
         res.status(200).send({
           id: sub.id,
           name: sub.name,
           active_until: sub.users[0].users_subscriptions.expiration_date,
           autorenewal: sub.users[0].users_subscriptions.autoRenewal,
-          status: sub.users[0].users_subscriptions.status
         });
       }, 1000);
     })
@@ -642,8 +652,6 @@ export function getBalance(req, res) {
       res.send(founded.balance.toString());
     })
       .catch((err) => {
-        console.log('balance err :', err);
-
         res.status(402).send({ message: 'Error' });
       })
   }
@@ -652,19 +660,108 @@ export function getBalance(req, res) {
   };
 }
 
-export function rechargeBalance(req, res) {
+//actual
+export async function getUrlToPay(req, res) {
+  try {
+    function makeid(length) {
+      let result = '';
+      const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      const charactersLength = characters.length;
+      let counter = 0;
+      while (counter < length) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        counter += 1;
+      }
+      return result;
+    }
+    // создание запроса в платилке
+    await axios.post('https://back.paypac.io/getWallet', {
+      amount: req.body.amount,
+      token: '2buXKLFBx4YYgUGLK8uvGQFNkWtZtLeIZjmU20iJdDsrV0JEMYSNPS8heXiwMbsfKonhkqeuxcLKvdw2jwNbqvNrouIxYbiZIKqebS1GVy1AsWVtnh5886p4hYQXoGqK',
+      client_reference_id: makeid(10)
+    }, {
+      httpsAgent
+    })
+      .then(function (response) {
+        console.log(response.data);
+        setTimeout(() => {
+          res.status(200).send({ urlToPay: response.data.data.widget_url });
+        }, 1000);
+
+
+        let interval = setInterval(async () => {
+          await axios.post('https://back.paypac.io/getDeposit', {
+            payment_number: response.data.data.id,
+            token: '2buXKLFBx4YYgUGLK8uvGQFNkWtZtLeIZjmU20iJdDsrV0JEMYSNPS8heXiwMbsfKonhkqeuxcLKvdw2jwNbqvNrouIxYbiZIKqebS1GVy1AsWVtnh5886p4hYQXoGqK'
+          }, {
+            httpsAgent
+          }).then(async responce => {
+            console.log(responce.data.success);
+            if (responce.data.success) {
+              clearInterval(interval)
+
+              await user.findOne({
+                where: {
+                  id: req.body.id
+                },
+                include: Subscriptions
+              }).then(async u => {
+                await deal_history.create({
+                  newBalance: Number(u.balance) + Number(req.body.amount),
+                  oldBalance: Number(u.balance),
+                  user_id: u.id,
+                  type: 'recharge',
+                  subscription_id: u.subscriptions[0].id
+                })
+                u.update({
+                  balance: u.balance + Number(req.body.amount)
+                })
+                  .then((u) => {
+                    wssSend(req.body.id, 'balance', u.balance)
+                    wssSend(req.body.id, 'alert', `Your balance was successfully credited (${req.body.amount} PAC)`)
+                  })
+                  .catch((err) => {
+                    console.log(err);
+                  })
+              })
+            }
+          })
+
+
+        }, 60000);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  }
+  catch {
+    res.status(5000).send({ message: 'gameId не существует' });
+  };
+}
+
+//unused func
+export async function rechargeBalance(req, res) {
   // Save User to Database
   console.log(req.body);
+
   try {
-    user.findOne({
+    await user.findOne({
       where: {
         id: req.body.id
-      }
-    }).then(u => {
+      },
+      include: Subscriptions
+    }).then(async u => {
+      await deal_history.create({
+        newBalance: Number(u.balance) + Number(req.body.amount),
+        oldBalance: Number(u.balance),
+        user_id: u.id,
+        type: 'recharge',
+        subscription_id: u.subscriptions[0].id
+      })
       u.update({
         balance: u.balance + Number(req.body.amount)
       })
-        .then(() => {
+        .then((u) => {
           res.status(200).json({
             balance: Number(u.balance) + Number(req.body.amount)
           });
@@ -679,13 +776,11 @@ export function rechargeBalance(req, res) {
   };
 }
 
-export function canIWithdraw(req, res) {
-  // Save User to Database\
-  console.log(req.body);
-  try {
-    user.findOne({
+const canIWithdrawFunction = async ({ user_id, s_id }) => {
+  return new Promise(async (resolve, reject) => {
+    await user.findOne({
       where: {
-        id: req.body.id
+        id: user_id
       },
       include: [{
         model: db.deal_history,
@@ -695,18 +790,18 @@ export function canIWithdraw(req, res) {
           createdAt: {
             [Op.lt]: new Date(),
             [Op.gt]: new Date(new Date() - 24 * 60 * 60 * 1000)
-          }
+          },
+          subscription_id: s_id
         }
       }, {
         model: Subscriptions,
         include: subscribe_limits
       }]
-    }).then(u => {
-      console.log('user', u);
+    }).then(async u => {
       let subsWithdrawalLimit = 0
       let commision = 0
       let availableBalanceToWithdraw = 0;
-      u.subscriptions[0].subscribe_limits.map(item => {
+      await u.subscriptions[0].subscribe_limits.map(item => {
         if (item.name == 'Daily withdrawal limit') {
           subsWithdrawalLimit = item.subscription_features.value;
         }
@@ -714,19 +809,29 @@ export function canIWithdraw(req, res) {
           commision = item.subscription_features.value;
         }
       });
-      u.deal_histories.map(item => {
+      await u.deal_histories.map(item => {
         availableBalanceToWithdraw += item.oldBalance - item.newBalance
       });
-      setTimeout(() => {
-        res.status(200).send({
-          AvailableToWithdraw: subsWithdrawalLimit - availableBalanceToWithdraw,
-          commision: commision
-        })
 
-      }, 1000);
+      await resolve({
+        AvailableToWithdraw: subsWithdrawalLimit - availableBalanceToWithdraw,
+        commision: commision
+      })
     }).catch(err => {
-      console.log(err);
+      reject(err)
     })
+
+  })
+}
+
+export async function canIWithdraw(req, res) {
+  try {
+    let responce = await canIWithdrawFunction({ user_id: req.body.id, s_id: req.body.subscription_id })
+    console.log(responce);
+
+    setTimeout(async () => {
+      res.status(200).send(await canIWithdrawFunction({ user_id: req.body.id, s_id: req.body.subscription_id }))
+    }, 1000);
   }
   catch {
     res.status(500).send({ message: 'Balance error!' });
@@ -741,19 +846,32 @@ export function withdrawBalance(req, res) {
     user.findOne({
       where: {
         id: req.body.id
-      }
-    }).then(u => {
-      if (u.balance >= req.body.amount) {
-        u.update({
+      },
+      include: Subscriptions
+    }).then(async u => {
+      const { AvailableToWithdraw, commision } = await canIWithdrawFunction({ user_id: req.body.id, s_id: u.subscriptions[0].id })
+      console.log('AvailableToWithdraw', AvailableToWithdraw);
+      if (u.balance >= req.body.amount && AvailableToWithdraw >= Number(req.body.amount)) {
+        await deal_history.create({
+          newBalance: Number(u.balance) - Number(req.body.amount),
+          oldBalance: Number(u.balance),
+          user_id: u.id,
+          type: 'withdrawal',
+          subscription_id: u.subscriptions[0].id
+        })
+        await u.update({
           balance: u.balance - Number(req.body.amount)
         })
-          .then(() => {
+          .then(async (u) => {
             res.status(200).json({
               balance: Number(u.balance) - Number(req.body.amount)
             });
+            wssSend(u.id, 'alert', `Withdrawal was successfully completed (${Number(req.body.amount)} PAC)`)
+            wssSend(u.id, 'balance', Number(u.balance))
           });
       }
       else {
+        wssSend(req.body.id, 'alert', 'Withdrawal error')
         res.status(499).send({ message: 'Balance coudnt be < 0!' });
       }
     })
