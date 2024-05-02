@@ -1,12 +1,15 @@
 import db from "../models/index.js";
 import { secret, jwtExpiration } from "../config/auth.config.js";
-const { user: User, role: Role, refreshToken: RefreshToken } = db;
+const { user: User, role: Role, refreshToken: RefreshToken, users_subscriptions: users_subscriptions } = db;
 
-import  Op  from "sequelize";
+import Sequelize from "sequelize";
+const Op = Sequelize.Op
 
-import sign from "jsonwebtoken";
-import hashSync from 'bcryptjs';
-import compareSync from 'bcryptjs';
+import pkgs from "jsonwebtoken";
+const { sign } = pkgs
+
+import pkg from 'bcryptjs';
+const { compareSync, hashSync } = pkg;
 
 import { sendEmail } from "../utils/mail.js";
 import { setCode, getCode } from "../utils/redis.js";
@@ -23,6 +26,13 @@ export function signup(req, res) {
     password: hashSync(req.body.password, 8)
   })
     .then(user => {
+      console.log(user);
+      users_subscriptions.create({
+        userId: user.id,
+        subscriptionId: 1,
+        expiration_date: null,
+        autoRenewal: false
+      })
       if (req.body.roles) {
         Role.findAll({
           where: {
@@ -32,7 +42,9 @@ export function signup(req, res) {
           }
         }).then(roles => {
           user.setRoles(roles).then(() => {
+
             res.send({ message: "User registered successfully!" });
+
           });
         });
       } else {
@@ -145,6 +157,7 @@ export function signin(req, res) {
       });
     })
     .catch(err => {
+      console.log(err);
       res.status(500).send({ message: err.message });
     });
 }
@@ -178,6 +191,10 @@ export async function refreshToken(req, res) {
       expiresIn: jwtExpiration,
     });
     console.warn(`user ${user.id} got new A/R tokens`);
+    console.log({
+      accessToken: newAccessToken,
+      refreshToken: refreshToken.token,
+    });
     return res.status(200).json({
       accessToken: newAccessToken,
       refreshToken: refreshToken.token,

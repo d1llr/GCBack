@@ -13,6 +13,7 @@ import {
   changePassword, checkOldPassword, changeEmail, changeUserData, deleteAccount, Purchases, Sell, setWallet, removeWallet, getSubscription, getSubscriptionById, getAvaliableLevels, changeSubscription, changeAutoRenew, rechargeBalance, canIWithdraw, withdrawBalance, moderatorBoard, adminBoard
 } from "../controllers/user.controller.js";
 
+import { getUrlToPay } from "../controllers/user.controller.js";
 
 export default function User(app) {
   app.use(function (req, res, next) {
@@ -56,6 +57,7 @@ export default function User(app) {
   app.post("/api/user/changeAutoRenew", [verifyToken], changeAutoRenew);
 
 
+  app.post("/api/user/getUrlToPay", [verifyToken], getUrlToPay);
 
   app.post("/api/user/rechargeBalance", [verifyToken], rechargeBalance);
   app.post("/api/user/canIWithdraw", [], canIWithdraw);

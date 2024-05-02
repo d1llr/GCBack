@@ -22,6 +22,9 @@ import Users_subscriptions from './Subscriptions/users_subscriptions.models.js'
 
 
 import Sequelize from "sequelize";
+
+
+
 console.log(USER);
 const sequelize = new Sequelize(
   DB,
