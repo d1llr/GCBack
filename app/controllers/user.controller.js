@@ -31,6 +31,8 @@ import { wssSend } from "../utils/wss.js";
 import { rejects } from "assert";
 const { compareSync, hashSync } = pkg;
 
+// import withdraw  from "../utils/contract/ChainInteractions.js";
+
 
 
 export function getInfoById(req, res) {
@@ -326,7 +328,6 @@ export async function getUserHistory(req, res) {
         order: [['createdAt', "DESC"]],
       }).then(founded => {
         founded.map(match => {
-          console.log(match.id, ' : ', match.balance_history?.newBalance);
           if (match.player_IDs) {
             if (match.player_IDs?.split(',')?.includes(req.body.id.toString())) {
               arr.push({
@@ -532,6 +533,7 @@ export function getSubscriptionById(req, res) {
         }
       }
     }).then(sub => {
+      
       setTimeout(() => {
         res.status(200).send({
           id: sub.id,
@@ -540,6 +542,8 @@ export function getSubscriptionById(req, res) {
           autorenewal: sub.users[0].users_subscriptions.autoRenewal,
         });
       }, 1000);
+    }).catch(err =>{
+      console.log(err);
     })
 
   }
@@ -783,7 +787,7 @@ const canIWithdrawFunction = async ({ user_id, s_id }) => {
         id: user_id
       },
       include: [{
-        model: db.deal_history,
+        model: deal_history,
         required: false,
         where: {
           type: 'withdrawal',
@@ -848,11 +852,30 @@ export function withdrawBalance(req, res) {
       where: {
         id: req.body.id
       },
-      include: Subscriptions
+      include: [{
+        model: Subscriptions,
+        include: subscribe_limits
+      }]
     }).then(async u => {
       const { AvailableToWithdraw, commision } = await canIWithdrawFunction({ user_id: req.body.id, s_id: u.subscriptions[0].id })
       console.log('AvailableToWithdraw', AvailableToWithdraw);
-      if (u.balance >= req.body.amount && AvailableToWithdraw >= Number(req.body.amount)) {
+      ///
+      let fee
+      await u.subscriptions[0].subscribe_limits.map(item => {
+        if (item.name == 'Withdrawal fee')
+          fee = item.subscription_features.value
+      })
+      ///
+      await axios.post('http://185.76.14.193:5000/sendPAC', {
+        user_id: req.body.id,
+        amount: req.body.amount,
+        fee: fee,
+        wallet: req.body.wallet
+      }, {
+        headers: {
+          'api': 'kdnqwdiqniwoxnuiqhw'
+        }
+      }).then(async resp => {
         await deal_history.create({
           newBalance: Number(u.balance) - Number(req.body.amount),
           oldBalance: Number(u.balance),
@@ -863,18 +886,41 @@ export function withdrawBalance(req, res) {
         await u.update({
           balance: u.balance - Number(req.body.amount)
         })
-          .then(async (u) => {
-            res.status(200).json({
-              balance: Number(u.balance) - Number(req.body.amount)
-            });
-            wssSend(u.id, 'alert', `Withdrawal was successfully completed (${Number(req.body.amount)} PAC)`)
-            wssSend(u.id, 'balance', Number(u.balance))
-          });
-      }
-      else {
-        wssSend(req.body.id, 'alert', 'Withdrawal error')
-        res.status(499).send({ message: 'Balance coudnt be < 0!' });
-      }
+          .then(async (us) => {
+            res.status(200).send({ message: 'Success' });
+            wssSend(us.id, 'balance', Number(u.balance))
+          })
+      }).catch(err => {
+        console.log(err);
+        res.status(500).json({ message: 'Error with withdrawal' })
+      })
+      // const result = (await withdraw(dataWithdrawal.amountWithdrawal.toString())).status
+      // if (!result) {
+      //   console.error("Transaction status: unfulfilled")
+      // }
+      // if (u.balance >= req.body.amount && AvailableToWithdraw >= Number(req.body.amount)) {
+      //   await deal_history.create({
+      //     newBalance: Number(u.balance) - Number(req.body.amount),
+      //     oldBalance: Number(u.balance),
+      //     user_id: u.id,
+      //     type: 'withdrawal',
+      //     subscription_id: u.subscriptions[0].id
+      //   })
+      //   await u.update({
+      //     balance: u.balance - Number(req.body.amount)
+      //   })
+      //     .then(async (u) => {
+      //       res.status(200).json({
+      //         balance: Number(u.balance) - Number(req.body.amount)
+      //       });
+      //       wssSend(u.id, 'alert', `Withdrawal was successfully completed (${Number(req.body.amount)} PAC)`)
+      //       wssSend(u.id, 'balance', Number(u.balance))
+      //     });
+      // }
+      // else {
+      //   wssSend(req.body.id, 'alert', 'Withdrawal error')
+      //   res.status(499).send({ message: 'Balance coudnt be < 0!' });
+      // }
     })
   }
   catch {
