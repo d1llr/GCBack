@@ -10,7 +10,7 @@ export function getCurrentDay(req, res) {
 }
 export function getCurrentSupply(req, res) {
     try {
-        let a = 38302143
+        let a = 40017678
         res.status(200).json(a);
     }
     catch {

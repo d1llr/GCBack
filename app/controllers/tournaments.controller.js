@@ -24,17 +24,119 @@ export async function getAll(req, res) {
 
 export async function getTournamentsByFilters(req, res) {
   try {
-    let arr = []
     let active = []
     let history = []
-    await activeTournaments.findAll().then(tournament => {
-      active = tournament
-    });
-    await historyTournaments.findAll().then(tournament => {
-      history = tournament
-    });
+    let operator;
+    //проверка на выбор, потому что нельзя выбрать and & or одновременно
+    if (req.body.chainID.length != 0) {
+      if (req.body.game_name.length != 0) {
+        operator = Op.and
+      }
+      else {
+        operator = Op.or
+      }
+    }
+    else {
+      if (req.body.game_name.length != 0) {
+        operator = Op.or
+      }
+      else {
+        operator = undefined
+      }
 
-    await res.status(200).json({ active: active, history: history });
+    }
+    if (req.body.type.length != 0) {
+      if (req.body.type.includes('active')) {
+        await activeTournaments.findAll({
+          where: {
+            [operator]: {
+              chainID: {
+                [Op.in]: req.body.chainID,
+              },
+              game_name: {
+                [Op.in]: req.body.game_name,
+              },
+
+            },
+          }
+        }
+        ).then(tournament => {
+          active = tournament
+        });
+      }
+      if (req.body.type.includes('ended')) {
+        if (operator) {
+          await historyTournaments.findAll({
+            where: {
+              [operator]: {
+                chainID: {
+                  [Op.in]: req.body.chainID,
+                },
+                game_name: {
+                  [Op.in]: req.body.game_name,
+                },
+
+              },
+            }
+          }).then(tournament => {
+            history = tournament
+          });
+        }
+        else {
+          await historyTournaments.findAll().then(tournament => {
+            history = tournament
+          });
+        }
+      }
+    }
+    else {
+      if (req.body.chainID.length == 0 && req.body.game_name.length == 0) {
+        await activeTournaments.findAll().then(tournament => {
+          active = tournament
+        });
+        await historyTournaments.findAll().then(tournament => {
+          history = tournament
+        });
+      }
+      else {
+        await activeTournaments.findAll({
+          where: {
+            [operator]: {
+              chainID: {
+                [Op.in]: req.body.chainID,
+              },
+              game_name: {
+                [Op.in]: req.body.game_name,
+              },
+
+            },
+          }
+        }
+        ).then(tournament => {
+          active = tournament
+        });
+        await historyTournaments.findAll({
+          where: {
+            [operator]: {
+              chainID: {
+                [Op.in]: req.body.chainID,
+              },
+              game_name: {
+                [Op.in]: req.body.game_name,
+              },
+
+            },
+
+          }
+        }).then(tournament => {
+          history = tournament
+        });
+      }
+    }
+    setTimeout(async () => {
+      await res.status(200).json({ active: active, history: history });
+    
+    }, 1000);
   }
   catch {
     res.status(500).send({ message: " " });
@@ -64,12 +166,15 @@ export async function getFilters(req, res) {
     await activeTournaments.findAll({
       attributes: ['chainID', 'game_name']
     }).then(tournaments => {
-      arr.push({ ...tournaments, type: 'active' })
+      if (tournaments.length != 0) {
+        arr.push({ ...tournaments, type: 'active' })
+      }
     })
     await historyTournaments.findAll({
       attributes: ['chainID', 'game_name']
     }).then(tournaments => {
-      arr.push({ ...tournaments, type: 'ended' })
+      if (tournaments.length != 0)
+        arr.push({ ...tournaments, type: 'ended' })
     })
 
 
