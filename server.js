@@ -123,7 +123,7 @@ const PORT = process.env.EXPRESS_PORT || 9091;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}. | ${process.env.NODE_ENV} |`);
   InitListeners()
-  wssInit(7070)
+  wssInit(process.env.WSS_PORT || 7070)
   // TournamentsInit()
 });
 

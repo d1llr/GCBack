@@ -818,6 +818,7 @@ const canIWithdrawFunction = async ({ user_id, s_id }) => {
         commision: commision
       })
     }).catch(err => {
+      console.log(err);
       reject(err)
     })
 
