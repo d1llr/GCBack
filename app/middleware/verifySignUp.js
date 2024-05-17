@@ -31,6 +31,34 @@ export const checkDuplicateEmail = (req, res, next) => {
   }
 };
 
+export const checkDuplicateUsernameChange = (req, res, next) => {
+  // Username
+  try {
+    if (req.body.username) {
+      User.findOne({
+        where: {
+          username: req.body.username
+        }
+      }).then(user => {
+        if (user && user.id !== req.body.id) {
+          console.log(user);
+          res.status(400).send({
+            message: "Username is already in use!",
+          });
+          return;
+        }
+        next()
+      });
+    }
+
+  }
+  catch {
+    res.status(503).send({
+      message: "Bad request!"
+    });
+  }
+};
+
 export const checkDuplicateUsername = (req, res, next) => {
   // Username
   try {
@@ -41,8 +69,9 @@ export const checkDuplicateUsername = (req, res, next) => {
         }
       }).then(user => {
         if (user) {
+          console.log(user);
           res.status(400).send({
-            message: "Username is already in use!"
+            message: "Username is already in use!",
           });
           return;
         }

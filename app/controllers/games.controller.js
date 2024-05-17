@@ -19,7 +19,7 @@ export function getAll(req, res) {
 export function getById(req, res) {
   try {
     games.findOne({
-      attributes: ['id', 'name', 'short_desc', 'links', 'code'],
+      attributes: ['id', 'name', 'short_desc', 'links', 'code', 'instruction'],
       where: {
         id: req.params["gameId"]
       }

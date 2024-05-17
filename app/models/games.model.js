@@ -31,6 +31,9 @@ export default (sequelize, Sequelize) => {
       type: Sequelize.STRING,
       primaryKey: true
     },
+    inctruction: {
+      type: Sequelize.STRING,
+    }
 
   });
 

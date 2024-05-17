@@ -1,7 +1,7 @@
 
 import { verifyToken } from "../middleware/authJwt.js";
 import { verifyApiKey } from "../middleware/authAPI.js";
-import { checkDuplicateEmail } from "../middleware/verifySignUp.js";
+import { checkDuplicateEmail, checkDuplicateUsernameChange } from "../middleware/verifySignUp.js";
 import { checkDuplicateUsername } from "../middleware/verifySignUp.js";
 import {
   getInfoById,
@@ -37,7 +37,7 @@ export default function User(app) {
   app.post("/api/user/changePassword", [], changePassword);
   app.post("/api/user/checkOldPassword", [verifyToken], checkOldPassword);
   app.post("/api/user/changeEmail", [checkDuplicateEmail, verifyToken], changeEmail);
-  app.post("/api/user/changeUserData", [verifyToken, checkDuplicateUsername], changeUserData);
+  app.post("/api/user/changeUserData", [verifyToken, checkDuplicateUsernameChange], changeUserData);
   app.post("/api/user/deleteAccount", [verifyToken], deleteAccount);
 
 
