@@ -7,15 +7,24 @@ const Op = Sequelize.Op
 
 export async function getAll(req, res) {
   try {
-    let arr = []
+    let arr = {}
+    let activeLength = 0;
     await activeTournaments.findAll().then(tournament => {
-      arr.push({ 'active': tournament })
+      activeLength = tournament.length;
+      arr.active = tournament.slice(req.body.offset, req.body.offset + req.body.limit);
     });
     await historyTournaments.findAll().then(tournament => {
-      arr.push({ 'history': tournament })
+      console.log(tournament.length);
+      if (!arr.active.length) { 
+        let historyOffset =  req.body.offset - activeLength;
+        arr.history = tournament.slice(historyOffset, historyOffset + req.body.limit);    
+      } else {
+        arr.history = tournament.slice(0, req.body.limit - arr.active.length);
+      } 
+
+      
     });
-    console.log(req.body.offset, req.body.offset + req.body.limit);
-    await res.status(200).json(arr.slice(req.body.offset, req.body.offset + req.body.limit));
+    await res.status(200).json(arr);
   }
   catch {
     res.status(500).send({ message: err.message });
@@ -27,6 +36,7 @@ export async function getTournamentsByFilters(req, res) {
     let active = []
     let history = []
     let operator;
+
     //проверка на выбор, потому что нельзя выбрать and & or одновременно
     if (req.body.chainID.length != 0) {
       if (req.body.game_name.length != 0) {
@@ -47,6 +57,7 @@ export async function getTournamentsByFilters(req, res) {
     }
     if (req.body.type.length != 0) {
       if (req.body.type.includes('active')) {
+        if (operator) {
         await activeTournaments.findAll({
           where: {
             [operator]: {
@@ -56,13 +67,17 @@ export async function getTournamentsByFilters(req, res) {
               game_name: {
                 [Op.in]: req.body.game_name,
               },
-
             },
           }
-        }
-        ).then(tournament => {
+        }).then(tournament => {
           active = tournament
         });
+      }
+      else {
+        await activeTournaments.findAll().then(tournament => {
+          active = tournament
+        });
+      }
       }
       if (req.body.type.includes('ended')) {
         if (operator) {
@@ -75,7 +90,6 @@ export async function getTournamentsByFilters(req, res) {
                 game_name: {
                   [Op.in]: req.body.game_name,
                 },
-
               },
             }
           }).then(tournament => {
@@ -191,7 +205,8 @@ export async function GetTournamentsCount(req, res) {
   try {
     const { count, rows } = await activeTournaments.findAndCountAll()
     const { count: historyCount, historyRows } = await historyTournaments.findAndCountAll()
-    console.log("activeCount", count);
+    // console.log("activeCount", count);
+    // console.log("historyCount", historyCount);
     res.status(200).json(count + historyCount)
 
   }
