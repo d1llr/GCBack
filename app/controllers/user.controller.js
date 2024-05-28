@@ -443,7 +443,14 @@ export function setWallet(req, res) {
 
           })
       } else if (u.wallet !== req.body.wallet) {
-        res.status(503).send({ message: 'Wallet already exist!' });
+        u.update({
+          wallet: req.body.wallet
+        })
+          .then(() => {
+            res.status(200).send('Wallet change success');
+
+          })
+        // res.status(503).send({ message: 'Wallet already exist!' });
       } else {
         res.status(200).send({ message: 'Wallet init success' });
       }

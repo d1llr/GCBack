@@ -5,7 +5,7 @@ const { games: games } = db;
 export function getAll(req, res) {
   try {
     games.findAll({
-      attributes: ['id', 'name', 'short_desc', 'active'],
+      attributes: ['id', 'name', 'short_desc', 'active', "code"],
       order:[['active', 'DESC']]
     }).then(games => {
       res.send(games);

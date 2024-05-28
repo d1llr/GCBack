@@ -36,6 +36,7 @@ export async function getTournamentsByFilters(req, res) {
     let active = []
     let history = []
     let operator;
+
     //проверка на выбор, потому что нельзя выбрать and & or одновременно
     if (req.body.chainID.length != 0) {
       if (req.body.game_name.length != 0) {
@@ -56,6 +57,7 @@ export async function getTournamentsByFilters(req, res) {
     }
     if (req.body.type.length != 0) {
       if (req.body.type.includes('active')) {
+        if (operator) {
         await activeTournaments.findAll({
           where: {
             [operator]: {
@@ -65,13 +67,17 @@ export async function getTournamentsByFilters(req, res) {
               game_name: {
                 [Op.in]: req.body.game_name,
               },
-
             },
           }
-        }
-        ).then(tournament => {
+        }).then(tournament => {
           active = tournament
         });
+      }
+      else {
+        await activeTournaments.findAll().then(tournament => {
+          active = tournament
+        });
+      }
       }
       if (req.body.type.includes('ended')) {
         if (operator) {
@@ -84,7 +90,6 @@ export async function getTournamentsByFilters(req, res) {
                 game_name: {
                   [Op.in]: req.body.game_name,
                 },
-
               },
             }
           }).then(tournament => {
